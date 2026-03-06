@@ -1,7 +1,7 @@
 # Blog-Proyect
 _API creada con Node js + Express - MongoDB._
 
-_http://localhost:3000/api-docs/_
+_Documentacion de API: http://localhost:3000/api-docs_
 
 
 ## Comenzando 🚀
