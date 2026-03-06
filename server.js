@@ -14,13 +14,14 @@ dotenv.config({ path: './config.env' });
 const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD); //se reemplaza la palabra por la password real de .config.env
 
 mongoose
-    // .connect(process.env.DATABASE_LOCAL, {
-    .connect(DB, {
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useFindAndModify: false,
-        useUnifiedTopology: true
-    }).then(() => {
+    .connect(process.env.DATABASE_LOCAL)
+    // .connect(DB, {
+    //     useNewUrlParser: true,
+    //     useCreateIndex: true,
+    //     useFindAndModify: false,
+    //     useUnifiedTopology: true
+    // }).then(() => {
+    .then(() => {
         console.log('DB connection successful!');
     })
 

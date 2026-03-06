@@ -1,9 +1,7 @@
 # Blog-Proyect
 _API creada con Node js + Express - MongoDB._
 
-_Este proyecto esta desplegado en un servidor heroku con algunos endpoints detallados para su uso._
-
-_https://blog-proyect.herokuapp.com/api-docs/_
+_http://localhost:3000/api-docs/_
 
 
 ## Comenzando 🚀
