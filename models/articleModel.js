@@ -20,7 +20,6 @@ const articleSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now(),
-        select: false // No devolver createdAt en el response
     },
     author: {
         type: mongoose.Schema.ObjectId,
@@ -41,6 +40,10 @@ const articleSchema = new mongoose.Schema({
             message: 'Category is either: Programacion or Idioma'
         }
 
+    },
+    views: {
+        type: Number,
+        default: 0
     }
 
 }, {

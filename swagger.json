@@ -27,6 +27,22 @@
         {
             "name": "Authentication",
             "description": "Endpoints relacionados con autenticación en el sistema"
+        },
+        {
+            "name": "Experiences",
+            "description": "Endpoints para experiencia laboral"
+        },
+        {
+            "name": "Cheatsheets",
+            "description": "Endpoints para hojas de trucos"
+        },
+        {
+            "name": "QuickTips",
+            "description": "Endpoints para snippets de código rápidos"
+        },
+        {
+            "name": "Contact",
+            "description": "Endpoints de contacto por email"
         }
     ],
     "paths": {
@@ -193,6 +209,58 @@
                     }
                 }
             }
+        },
+        "/experiences": {
+            "get": {
+                "tags": [
+                    "Experiences"
+                ],
+                "description": "Listado de experiencias",
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    }
+                }
+            }
+        },
+        "/cheatsheets": {
+            "get": {
+                "tags": [
+                    "Cheatsheets"
+                ],
+                "description": "Listado de cheatsheets",
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    }
+                }
+            }
+        },
+        "/quicktips": {
+            "get": {
+                "tags": [
+                    "QuickTips"
+                ],
+                "description": "Listado de quicktips",
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    }
+                }
+            }
+        },
+        "/contact": {
+            "post": {
+                "tags": [
+                    "Contact"
+                ],
+                "description": "Envía un email de contacto",
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -289,6 +357,48 @@
                             "Programacion",
                             "Idioma"
                         ]
+                    }
+                }
+            },
+            "Experience": {
+                "type": "object",
+                "properties": {
+                    "company": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Cheatsheet": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "fileUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "QuickTip": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "codeSnippet": {
+                        "type": "string"
                     }
                 }
             }

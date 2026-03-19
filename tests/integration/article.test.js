@@ -1,0 +1,92 @@
+const request = require('supertest');
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+process.env.JWT_SECRET = 'test-secret-key-for-automated-testing';
+process.env.JWT_EXPIRES_IN = '1d';
+process.env.JWT_COOKIE_EXPIRES_IN = '1';
+process.env.NODE_ENV = 'test';
+
+jest.setTimeout(30000);
+
+let mongoServer;
+let app;
+let adminToken;
+let adminId;
+
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  await mongoose.connect(mongoServer.getUri());
+  
+  delete require.cache[require.resolve('../../app')];
+  app = require('../../app');
+
+  const User = require('../../models/userModel');
+  const adminDoc = await User.create({
+    name: 'Admin User',
+    email: 'admin_final@test.com',
+    password: 'password123',
+    passwordConfirm: 'password123',
+    role: 'admin'
+  });
+  adminId = adminDoc._id;
+
+  const res = await request(app)
+    .post('/api/v1/users/login')
+    .send({ email: 'admin_final@test.com', password: 'password123' });
+  adminToken = res.body.token;
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
+describe('Article API Integration', () => {
+  const testArticle = {
+    title: 'Test de Integración Final',
+    description: 'Descripción del test.',
+    category: 'Programacion'
+  };
+
+  it('debería manejar el ciclo de vida completo de un artículo (GET, POST, PATCH, DELETE)', async () => {
+    // 1. GET ALL (Vacio)
+    const resGet = await request(app).get('/api/v1/articles');
+    expect(resGet.statusCode).toBe(200);
+    expect(resGet.body.data.articles).toHaveLength(0);
+
+    // 2. POST (Crear)
+    const resPost = await request(app)
+      .post('/api/v1/articles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(testArticle);
+    expect(resPost.statusCode).toBe(201);
+    const articleId = resPost.body.data.article._id;
+
+    // 3. PATCH (Actualizar)
+    const resPatch = await request(app)
+      .patch(`/api/v1/articles/${articleId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Título Modificado' });
+    expect(resPatch.statusCode).toBe(200);
+    expect(resPatch.body.data.article.title).toBe('Título Modificado');
+
+    // 4. DELETE (Eliminar)
+    const resDelete = await request(app)
+      .delete(`/api/v1/articles/${articleId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(resDelete.statusCode).toBe(204);
+
+    // 5. Verificar eliminación
+    const Article = require('../../models/articleModel');
+    const check = await Article.findById(articleId);
+    expect(check).toBeNull();
+  });
+
+  it('debería denegar acceso a creación sin token', async () => {
+    const res = await request(app)
+      .post('/api/v1/articles')
+      .send(testArticle);
+    expect(res.statusCode).toBe(401);
+  });
+});

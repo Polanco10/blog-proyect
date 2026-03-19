@@ -14,6 +14,10 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const articleRouter = require('./routes/articleRoutes');
 const userRouter = require('./routes/userRoutes');
+const experienceRouter = require('./routes/experienceRoutes');
+const cheatsheetRouter = require('./routes/cheatsheetRoutes');
+const quicktipRouter = require('./routes/quicktipRoutes');
+const contactRouter = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -35,7 +39,9 @@ const limiter = rateLimit({ // Requests validas por IP - max: 100 -> 100 request
     windowMs: 60 * 60 * 1000,
     message: ' Too many request from this IP, please try again in an hour'
 });
-app.use('/api', limiter); //middleware - afecta a todas las rutas que empiecen con /api
+if (process.env.NODE_ENV !== 'test') {
+    app.use('/api', limiter); //middleware - afecta a todas las rutas que empiecen con /api
+}
 
 // permite ver properties del objeto express (ej:res,req), leer elemento del .body
 app.use(express.json({ limit: '10kb' })); //limita el tamaño del .body req a 10kb
@@ -73,6 +79,10 @@ app.use((req, res, next) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/v1/articles', articleRouter); //middleware -> mounting multiple routers
 app.use('/api/v1/users', userRouter); //middleware -> mounting multiple routers
+app.use('/api/v1/experiences', experienceRouter);
+app.use('/api/v1/cheatsheets', cheatsheetRouter);
+app.use('/api/v1/quicktips', quicktipRouter);
+app.use('/api/v1/contact', contactRouter);
 app.all('*', (req, res, next) => { // Unhandled routes - rutas no definidas
     next(new AppError(` Can't find ${req.originalUrl} on this server`, 404)); //se salta el resto de los middleware 
 })
