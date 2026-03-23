@@ -7,7 +7,7 @@ exports.getAllQuickTips = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         results: quicktips.length,
-        data: { quicktips },
+        data: { tips: quicktips },
     });
 });
 

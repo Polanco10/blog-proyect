@@ -17,4 +17,17 @@ module.exports = {
         '**/tests/**/*.test.js',
         '**/tests/**/*.test.ts',
     ],
+    collectCoverageFrom: [
+        'controllers/**/*.{js,ts}',
+        'models/**/*.{js,ts}',
+        'utils/**/*.{js,ts}',
+        'routes/**/*.{js,ts}',
+        '!**/node_modules/**',
+    ],
+    coverageThreshold: {
+        global: {
+            statements: 70,
+            branches: 60,
+        },
+    },
 };

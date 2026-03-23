@@ -14,10 +14,12 @@ process.on('uncaughtException', err => { //se define un listener para manejar ex
 
 const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD); //se reemplaza la palabra por la password real de .config.env
 
+const connectionString = process.env.NODE_ENV === 'production' ? DB : process.env.DATABASE_LOCAL;
+
 mongoose
-    .connect(process.env.DATABASE_LOCAL)
+    .connect(connectionString)
     .then(() => {
-        logger.info('DB connection successful!');
+        logger.info('DB connection successful!', { env: process.env.NODE_ENV });
     })
 
 const app = require('./app');

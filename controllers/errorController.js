@@ -25,14 +25,14 @@ const sendErrorDev = (err, res) => {
         stack: err.stack
     })
 }
-const sendErrorProd = (err, res) => {
+const sendErrorProd = (err, req, res) => {
     if (err.isOperational) {
         res.status(err.statusCode).json({
             status: err.status,
             message: err.message
         })
     } else {
-        logger.error('Unexpected error', { name: err.name, message: err.message, stack: err.stack }); //Log error
+        logger.error('Unexpected error', { requestId: req.requestId, name: err.name, message: err.message, stack: err.stack }); //Log error
 
         res.status(500).json({  //Enviar un mensaje generico
             status: 'error',
@@ -58,7 +58,7 @@ module.exports = (err, req, res, next) => { //Error handling middleware - maneja
         if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
         if (error.name === 'JsonWebTokenError') error = handleJWTError();
         if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
-        sendErrorProd(error, res);
+        sendErrorProd(error, req, res);
     }
 
 

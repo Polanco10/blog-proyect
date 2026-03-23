@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { CATEGORIES } = require('../constants');
 // const validator = require('validator');
 
 const articleSchema = new mongoose.Schema({
@@ -36,7 +37,7 @@ const articleSchema = new mongoose.Schema({
         type: String,
         trim: true, // borra los espacios al principio y al final de los strings
         enum: {     // validacion
-            values: ['Programacion', 'Idioma'],
+            values: [CATEGORIES.PROGRAMACION, CATEGORIES.IDIOMA],
             message: 'Category is either: Programacion or Idioma'
         }
 

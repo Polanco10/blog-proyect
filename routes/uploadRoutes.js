@@ -3,6 +3,7 @@ const path = require('path');
 const { upload, resizeArticleImage, resizeUserPhoto } = require('../utils/upload');
 const authController = require('../controllers/authController');
 const catchAsync = require('../utils/catchAsync');
+const { ROLES } = require('../constants');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const router = express.Router();
 router.post(
     '/article-image',
     authController.protect,
-    authController.restrictTo('admin'),
+    authController.restrictTo(ROLES.ADMIN),
     upload.single('image'),
     resizeArticleImage,
     (req, res) => {

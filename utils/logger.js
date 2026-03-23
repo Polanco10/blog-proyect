@@ -31,8 +31,18 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
-// En desarrollo y test: imprimir en consola con formato legible
-if (process.env.NODE_ENV !== 'production') {
+// En producción: JSON estructurado a stdout (capturado por CloudWatch / PM2 logs)
+if (process.env.NODE_ENV === 'production') {
+    logger.add(
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            ),
+        })
+    );
+} else {
+    // En desarrollo y test: imprimir en consola con formato legible
     logger.add(
         new winston.transports.Console({
             format: winston.format.combine(

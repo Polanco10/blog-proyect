@@ -1,17 +1,18 @@
 const validate = require('./validate');
+const { CATEGORIES } = require('../constants');
 
 // Schemas de validación por recurso
 exports.validateArticle = validate({
     title: { required: true, type: 'string', minlength: 10, maxlength: 40 },
     description: { required: true, type: 'string', minlength: 10, maxlength: 500 },
-    category: { required: true, type: 'string', enum: ['Programacion', 'Idioma'] },
+    category: { required: true, type: 'string', enum: [CATEGORIES.PROGRAMACION, CATEGORIES.IDIOMA] },
 });
 
 // Para PATCH — sin required, solo valida los campos presentes
 exports.validateArticlePatch = validate({
     title: { type: 'string', minlength: 10, maxlength: 40 },
     description: { type: 'string', minlength: 10, maxlength: 500 },
-    category: { type: 'string', enum: ['Programacion', 'Idioma'] },
+    category: { type: 'string', enum: [CATEGORIES.PROGRAMACION, CATEGORIES.IDIOMA] },
 });
 
 exports.validateQuickTip = validate({

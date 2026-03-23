@@ -7,6 +7,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp')
 const compression = require('compression');
 const cors = require('cors');
+const { randomUUID } = require('crypto');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 
@@ -25,12 +26,30 @@ const uploadRouter = require('./routes/uploadRoutes');
 
 const app = express();
 
-//app.enable('trust proxy');
+app.enable('trust proxy'); // Necesario detrás del proxy de Railway/Nginx
 //global middlewares
 //middlewares -> en la mitad entre el req y el res
-app.use(cors()); //agrega algunos headers al response
 
-app.options('*', cors()); //Habilitar cors para todos los http methods
+// Restringir CORS a orígenes permitidos en producción
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:4200'];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Permitir requests sin origen (curl, Postman, SSR)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+        }
+    },
+    credentials: true,
+};
+
+app.use(cors(corsOptions)); //agrega algunos headers al response
+
+app.options('*', cors(corsOptions)); //Habilitar cors para todos los http methods
 
 app.use(helmet()); // Se agregan headers de seguridad http 
 
@@ -67,6 +86,14 @@ app.use(hpp({
 
 app.use(compression()) //comprimir texto enviado a los clients
 
+// Correlation ID middleware — propaga X-Request-ID en request y response
+app.use((req, res, next) => {
+    const requestId = req.headers['x-request-id'] || randomUUID();
+    req.requestId = requestId;
+    res.setHeader('X-Request-ID', requestId);
+    next();
+});
+
 // date middleware
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
@@ -78,6 +105,7 @@ if (process.env.NODE_ENV !== 'test') {
     app.use((req, res, next) => {
         res.on('finish', () => {
             logger.info('HTTP request', {
+                requestId: req.requestId,
                 method: req.method,
                 url: req.originalUrl,
                 status: res.statusCode,

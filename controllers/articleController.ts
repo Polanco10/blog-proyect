@@ -1,24 +1,25 @@
+import { Request, Response, NextFunction } from 'express';
 const articleRepository = require('../repositories/articleRepository');
 const quicktipRepository = require('../repositories/quicktipRepository');
 const cheatsheetRepository = require('../repositories/cheatsheetRepository');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
 
 // Middleware — asigna el usuario loggeado como author del artículo
-exports.setAuthor = (req, res, next) => {
-    req.body.author = req.user.id;
+export const setAuthor = (req: Request, res: Response, next: NextFunction): void => {
+    req.body.author = (req as any).user.id;
     next();
 };
 
 // Aliasing — pre-configura query para top artículos
-exports.aliasTopArticles = (req, res, next) => {
+export const aliasTopArticles = (req: Request, res: Response, next: NextFunction): void => {
     req.query.limit = '5';
     req.query.sort = 'title';
     req.query.fields = 'title,author';
     next();
 };
 
-exports.getAllArticles = catchAsync(async (req, res) => {
+export const getAllArticles = catchAsync(async (req: Request, res: Response) => {
     const articles = await articleRepository.findAll(req.query);
     res.status(200).json({
         status: 'success',
@@ -27,7 +28,7 @@ exports.getAllArticles = catchAsync(async (req, res) => {
     });
 });
 
-exports.getArticle = catchAsync(async (req, res, next) => {
+export const getArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.findById(req.params.id);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
@@ -36,7 +37,7 @@ exports.getArticle = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.createArticle = catchAsync(async (req, res) => {
+export const createArticle = catchAsync(async (req: Request, res: Response) => {
     const article = await articleRepository.create(req.body);
     res.status(201).json({
         status: 'success',
@@ -44,7 +45,7 @@ exports.createArticle = catchAsync(async (req, res) => {
     });
 });
 
-exports.updateArticle = catchAsync(async (req, res, next) => {
+export const updateArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.updateById(req.params.id, req.body);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
@@ -53,8 +54,8 @@ exports.updateArticle = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.searchArticles = catchAsync(async (req, res, next) => {
-    const { q, limit } = req.query;
+export const searchArticles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { q, limit } = req.query as { q?: string; limit?: string };
     if (!q || !q.trim()) {
         return next(new AppError('Search query parameter "q" is required', 400));
     }
@@ -66,28 +67,28 @@ exports.searchArticles = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.deleteArticle = catchAsync(async (req, res, next) => {
+export const deleteArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.deleteById(req.params.id);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(204).json({ status: 'success', data: null });
 });
 
 // Incrementa las vistas de un artículo (llamado cuando el usuario abre el artículo)
-exports.incrementViews = catchAsync(async (req, res, next) => {
+export const incrementViews = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.incrementViews(req.params.id);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { views: article.views } });
 });
 
 // Like / reacción a un artículo (sin auth — un like por sesión se controla en frontend)
-exports.likeArticle = catchAsync(async (req, res, next) => {
+export const likeArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.incrementLikes(req.params.id);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { likes: article.likes } });
 });
 
 // Artículos relacionados — mismo category, excluyendo el actual
-exports.getRelatedArticles = catchAsync(async (req, res, next) => {
+export const getRelatedArticles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const current = await articleRepository.findById(req.params.id);
     if (!current) return next(new AppError('No document found with that ID', 404));
     const related = await articleRepository.findRelated(req.params.id, current.category);
@@ -95,17 +96,17 @@ exports.getRelatedArticles = catchAsync(async (req, res, next) => {
 });
 
 // Borradores — solo admin
-exports.getDrafts = catchAsync(async (req, res) => {
+export const getDrafts = catchAsync(async (req: Request, res: Response) => {
     const articles = await articleRepository.findDrafts();
     res.status(200).json({ status: 'success', results: articles.length, data: { articles } });
 });
 
 // Estadísticas del dashboard de admin
-exports.getAdminStats = catchAsync(async (req, res) => {
+export const getAdminStats = catchAsync(async (req: Request, res: Response) => {
     const [articleStats, tipsTotal, cheatsheetsTotal, topArticles] = await Promise.all([
         articleRepository.getStats(),
-        quicktipRepository.findAll({}).then(r => r.length),
-        cheatsheetRepository.findAll({}).then(r => r.length),
+        quicktipRepository.findAll({}).then((r: any[]) => r.length),
+        cheatsheetRepository.findAll({}).then((r: any[]) => r.length),
         articleRepository.findTopByViews(5),
     ]);
     res.status(200).json({
