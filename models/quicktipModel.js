@@ -39,5 +39,10 @@ const quickTipSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// Indexes para filtrado por lenguaje y nivel
+quickTipSchema.index({ language: 1 });
+quickTipSchema.index({ seniority: 1 });
+quickTipSchema.index({ language: 1, seniority: 1 });
+
 const QuickTip = mongoose.model('QuickTip', quickTipSchema);
 module.exports = QuickTip;

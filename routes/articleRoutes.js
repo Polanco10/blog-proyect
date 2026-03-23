@@ -1,25 +1,31 @@
 const express = require('express');
 const articleController = require('../controllers/articleController');
 const authController = require('./../controllers/authController');
+const { validateArticle, validateArticlePatch } = require('../utils/validators');
+const { upload, resizeArticleImage } = require('../utils/upload');
 
-const router = express.Router(); //  middleware function
-// const router = express.Router({mergeParams:true}); mergeParams:true-> acceso a params de otros routers definidos en otro routes / sirve para nested routes
+const router = express.Router();
 
-//param middleware
-//validate ID
-// router.param('id', articleController.checkID);
-
+// Aliased / special routes (before /:id to avoid conflicts)
 router.route('/top-5').get(articleController.aliasTopArticles, articleController.getAllArticles);
+router.route('/search').get(articleController.searchArticles);
+router.route('/drafts').get(authController.protect, authController.restrictTo('admin'), articleController.getDrafts);
+router.route('/admin/stats').get(authController.protect, authController.restrictTo('admin'), articleController.getAdminStats);
 
-//routes
 router
     .route('/')
     .get(articleController.getAllArticles)
-    .post(authController.protect, authController.restrictTo('admin'), articleController.setAuthor, articleController.createArticle);
+    .post(authController.protect, authController.restrictTo('admin'), upload.single('imageCover'), resizeArticleImage, validateArticle, articleController.setAuthor, articleController.createArticle);
+
 router
     .route('/:id')
     .get(articleController.getArticle)
-    .patch(authController.protect, authController.restrictTo('admin'), articleController.updateArticle)
+    .patch(authController.protect, authController.restrictTo('admin'), upload.single('imageCover'), resizeArticleImage, validateArticlePatch, articleController.updateArticle)
     .delete(authController.protect, authController.restrictTo('admin'), articleController.deleteArticle);
+
+// Article sub-actions
+router.route('/:id/view').patch(articleController.incrementViews);
+router.route('/:id/like').patch(articleController.likeArticle);
+router.route('/:id/related').get(articleController.getRelatedArticles);
 
 module.exports = router;

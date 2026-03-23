@@ -1,10 +1,11 @@
 const crypto = require('crypto');
-const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const AppError = require('./../utils/appError')
 const catchAsync = require('./../utils/catchAsync');
 const sendEmail = require('./../utils/email');
+const jwtStrategy = require('../strategies/jwtStrategy');
+const localStrategy = require('../strategies/localStrategy');
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });//payload -> data a encriptar (_id) / se encripta en base a un secret y una fecha de expiracion
@@ -41,17 +42,16 @@ exports.signup = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return next(new AppError('Please provide email and password!', 400));
+    // Delega la verificación de credenciales a LocalStrategy
+    const payload = await localStrategy.authenticate(req);
+    if (!payload) {
+        return next(new AppError('Incorrect email or password', 401));
     }
-    const user = await User.findOne({ email }).select('+password'); //Devuelve la password en la consulta - que se configuró en el modelo como select: false
-
-    if (!user || !await user.correctPassword(password, user.password)) {
+    const user = await User.findById(payload.id);
+    if (!user) {
         return next(new AppError('Incorrect email or password', 401));
     }
     createSendToken(user, 200, req, res);
-
 });
 
 exports.logout = (req, res) => {
@@ -62,21 +62,18 @@ exports.logout = (req, res) => {
     res.status(200).json({ status: 'success' });
 };
 
-exports.protect = catchAsync(async (req, res, next) => { //Protect middleware - valida las rutas solamente para usuarios logeados 
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) { //Valida que hayan enviado el token dentro del header del request
-        token = req.headers.authorization.split(' ')[1];
-    }
-    if (!token) {
+exports.protect = catchAsync(async (req, res, next) => { //Protect middleware - valida las rutas solamente para usuarios logeados
+    // Delega la extracción y verificación del token a JWTStrategy
+    const payload = await jwtStrategy.authenticate(req);
+    if (!payload) {
         return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); //Se mete en una promesa la funcion verify / Se decodifica el token que se recibe / Levanta un Error si es que no es valido
 
-    const currentUser = await User.findById(decoded.id); // Se valida que el usuario aun exista
+    const currentUser = await User.findById(payload.id); // Se valida que el usuario aun exista
     if (!currentUser) {
         return next(new AppError('The user belonging to this token does not exist.', 401))
     }
-    if (currentUser.changedPasswordAfter(decoded.iat)) {//iat=issued at - Valida si es que el token se invalida por cambio de password
+    if (currentUser.changedPasswordAfter(payload.iat)) {//iat=issued at - Valida si es que el token se invalida por cambio de password
         return next(new AppError('User recently changed password! Please log in again.', 401))
     }
     req.user = currentUser; //Se almacena el usuario en el request para poder usarlo en otros middlewares

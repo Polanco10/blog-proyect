@@ -1,4 +1,5 @@
-const AppError = require('./../utils/appError')
+const AppError = require('./../utils/appError');
+const logger = require('../utils/logger');
 
 const handleCastErrorDB = (err) => { //manejar errores provinientes de la base de datos - ej: id no existe
     const message = `Invalid ${err.path}: ${err.value}`;
@@ -31,8 +32,7 @@ const sendErrorProd = (err, res) => {
             message: err.message
         })
     } else {
-        // eslint-disable-next-line no-console
-        console.error('Error ', err); //Log error
+        logger.error('Unexpected error', { name: err.name, message: err.message, stack: err.stack }); //Log error
 
         res.status(500).json({  //Enviar un mensaje generico
             status: 'error',

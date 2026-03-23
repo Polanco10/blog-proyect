@@ -1,13 +1,9 @@
 const express = require('express');
+const contactController = require('../controllers/contactController');
+const { validateContact } = require('../utils/validators');
 
 const router = express.Router();
 
-router.post('/', async (req, res, next) => {
-    // TODO: Map to actual Nodemailer configuration
-    res.status(200).json({
-        status: 'success',
-        message: 'Your email has been successfully sent!'
-    });
-});
+router.post('/', validateContact, contactController.sendContactMessage);
 
 module.exports = router;

@@ -12,12 +12,16 @@ const swaggerDocument = require('./swagger.json');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
+const logger = require('./utils/logger');
 const articleRouter = require('./routes/articleRoutes');
 const userRouter = require('./routes/userRoutes');
 const experienceRouter = require('./routes/experienceRoutes');
 const cheatsheetRouter = require('./routes/cheatsheetRoutes');
 const quicktipRouter = require('./routes/quicktipRoutes');
 const contactRouter = require('./routes/contactRoutes');
+const commentRouter = require('./routes/commentRoutes');
+const feedRouter = require('./routes/feedRoutes');
+const uploadRouter = require('./routes/uploadRoutes');
 
 const app = express();
 
@@ -45,6 +49,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // permite ver properties del objeto express (ej:res,req), leer elemento del .body
 app.use(express.json({ limit: '10kb' })); //limita el tamaño del .body req a 10kb
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 //permite abrir por url archivos estaticos desde la carpeta sin necesidad de un route
 app.use(express.static(`${__dirname}/public`));
@@ -68,6 +73,21 @@ app.use((req, res, next) => {
     next();
 });
 
+// structured request logging (skip in test to keep output clean)
+if (process.env.NODE_ENV !== 'test') {
+    app.use((req, res, next) => {
+        res.on('finish', () => {
+            logger.info('HTTP request', {
+                method: req.method,
+                url: req.originalUrl,
+                status: res.statusCode,
+                ip: req.ip,
+            });
+        });
+        next();
+    });
+}
+
 // app.get('/api/v1/articles', getAllArticles);
 // app.post('/api/v1/articles', createArticle);
 //PATCH para modificaciones parciales
@@ -83,6 +103,9 @@ app.use('/api/v1/experiences', experienceRouter);
 app.use('/api/v1/cheatsheets', cheatsheetRouter);
 app.use('/api/v1/quicktips', quicktipRouter);
 app.use('/api/v1/contact', contactRouter);
+app.use('/api/v1/upload', uploadRouter);
+app.use('/api/v1/articles/:articleId/comments', commentRouter);
+app.use('/api', feedRouter);
 app.all('*', (req, res, next) => { // Unhandled routes - rutas no definidas
     next(new AppError(` Can't find ${req.originalUrl} on this server`, 404)); //se salta el resto de los middleware 
 })

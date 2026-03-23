@@ -31,5 +31,8 @@ const cheatsheetSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// Index para filtrado por categoría
+cheatsheetSchema.index({ category: 1 });
+
 const Cheatsheet = mongoose.model('Cheatsheet', cheatsheetSchema);
 module.exports = Cheatsheet;

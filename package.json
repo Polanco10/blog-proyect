@@ -5,9 +5,10 @@
   "main": "app.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "prod": "NODE_ENV=production nodemon server.js",
+    "dev": "nodemon --exec tsx server.js",
+    "prod": "NODE_ENV=production tsx server.js",
     "debug": "ndb server.js",
+    "build": "tsc --noEmit",
     "test": "jest --forceExit --detectOpenHandles",
     "test:verbose": "jest --forceExit --detectOpenHandles --verbose"
   },
@@ -26,12 +27,26 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.2",
     "morgan": "^1.10.0",
+    "multer": "^2.1.1",
     "nodemailer": "^8.0.1",
+    "sharp": "^0.34.5",
     "swagger-ui-express": "^5.0.0",
     "validator": "^13.11.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/hpp": "^0.2.7",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^25.5.0",
+    "@types/nodemailer": "^7.0.11",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.1.0",
@@ -43,7 +58,10 @@
     "jest": "^30.3.0",
     "mongodb-memory-server": "^11.0.1",
     "prettier": "^3.2.5",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.0.0"

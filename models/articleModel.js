@@ -41,16 +41,31 @@ const articleSchema = new mongoose.Schema({
         }
 
     },
+    content: {
+        type: String,
+        trim: true
+    },
     views: {
         type: Number,
         default: 0
+    },
+    likes: {
+        type: Number,
+        default: 0
+    },
+    published: {
+        type: Boolean,
+        default: true
     }
 
 }, {
     toJSON: { virtuals: true }, //para devolver virtuals properties en el response
     toObject: { virtuals: true } //para devolver virtuals properties en el response
 });
-// articleSchema.index({createdAt:1, author:-1}) // Index - Crear un index para optimizar busqueda
+// Indexes para optimizar búsquedas frecuentes
+articleSchema.index({ category: 1, createdAt: -1 });
+articleSchema.index({ views: -1 });
+articleSchema.index({ title: 'text', description: 'text' }); // full-text search
 // articleSchema.virtual('lolcalTime').get(function () { //virtual property - no persiste en la base de datos
 //     return 'localtime'
 // })
@@ -62,10 +77,13 @@ const articleSchema = new mongoose.Schema({
 // articleSchema.statics.nombrefuncion = function(){} // static function - funcion que se puede usar dentro de los model middleware
 // articleSchema.pre('find', function (next) {    // query middleware - se ejecuta antes de query find() - No ocurre con findOne()
 articleSchema.pre(/^find/, function (next) {  // query middleware - se ejecuta antes de cualquier query find
+    // Solo mostrar artículos publicados en queries públicas (no cuando se especifica published explícitamente)
+    if (this.getFilter().published === undefined && !this._skipPublishedFilter) {
+        this.where({ published: true });
+    }
     this.populate({ // .populate() hace el "join" cuando se tiene un objectId como referencia dentro de otro documento
         path: 'author', //property del request
         select: '-__v'
-
     });
     next();
 })
