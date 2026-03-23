@@ -1,129 +1,258 @@
-# DevBlog - Backend API (Node.js & Express)
+# Polanco.dev — Backend API
 
-Este repositorio contiene la **API RESTful** que alimenta toda la plataforma de DevBlog: un Blog de Tecnología personal, Portafolio Profesional (Experiencias), Guías Rápidas (Cheatsheets) y Consejos Técnicos (Quick Tips). Construido sobre **Node.js**, **Express** y **MongoDB** (a través de Mongoose), siguiendo una arquitectura escalable basada en los patrones **MVC** (Modelo-Vista-Controlador) y **Factory**.
-
----
-
-## ✨ Características Principales
-
-- **Endpoints CRUD Completos**: Para `Artículos`, `Experiencias Profesionales`, `Cheatsheets` y `Quick Tips`.
-- **Autenticación y Autorización**: Protección de rutas administrativas mediante **JWT** (JSON Web Tokens) con control de roles (`admin`, `user`).
-- **Seguridad Avanzada**: Incluye limitación de peticiones (Rate Limiting), protección contra contaminación de parámetros HTTP (HPP), sanitización de datos contra inyecciones NoSQL y ataques XSS, y cabeceras de seguridad mediante **Helmet**.
-- **Modelado de Datos con Mongoose**: Esquemas extensibles con hooks pre/post para lógica de negocio automatizada.
-- **Sistema de Contacto por Email**: Integración con **Nodemailer** para recibir mensajes directamente desde el formulario de contacto del Frontend.
-- **Documentación Interactiva**: Integración de **Swagger UI** para explorar, probar y documentar todos los endpoints de la API de forma visual.
+La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de trucos rápidos, biblioteca de cheatsheets y portafolio profesional. Construida con **Node.js**, **Express** y **MongoDB** (Mongoose), siguiendo los patrones **MVC + Factory + Repository + Strategy**.
 
 ---
 
-## 🛠️ Requisitos Previos
+## Características Principales
 
-- **Node.js**: v18.0.0 o superior (se recomienda usar versiones LTS como v20 o v22).
-- **MongoDB**: Una instancia local de base de datos corriendo (`mongod`) o un clúster remoto en **MongoDB Atlas**.
-- **NPM**: Administrador de paquetes de Node (incluido con Node.js).
-
----
-
-## ⚙️ Configuración e Instalación Local
-
-1.  **Clona el repositorio**:
-    Navega hacia tu carpeta de trabajo local y clona este proyecto:
-    ```bash
-    git clone <url-del-repositorio>
-    cd blog-proyect
-    ```
-
-2.  **Instala las dependencias**:
-    ```bash
-    npm install
-    ```
-    *Nota: Esto instalará Express, Mongoose, Swagger-UI-Express, Nodemailer, y todos los middlewares de seguridad necesarios.*
-
-3.  **Configuración del archivo de entorno**:
-    La aplicación requiere un archivo de configuración para conectarse a la base de datos, firmar los tokens JWT y enviar correos. Asegúrate de tener un archivo `config.env` en la raíz del proyecto con la siguiente estructura:
-    ```env
-    NODE_ENV=development
-    PORT=3000
-
-    # Conexión a Base de Datos Local
-    DATABASE_LOCAL=mongodb://localhost:27017/tech-blog-db
-
-    # Base de Datos Remota (Opcional para Producción)
-    DATABASE=mongodb+srv://<USUARIO>:<CONTRASEÑA>@cluster0...
-
-    # Configuración de JWT
-    JWT_SECRET=cadena-secreta-para-encriptar-la-firma
-    JWT_EXPIRES_IN=90d
-    JWT_COOKIE_EXPIRES_IN=90
-
-    # Configuración de Email (Nodemailer vía Mailtrap/SMTP)
-    EMAIL_USERNAME=tu_usuario
-    EMAIL_PASSWORD=tu_contraseña
-    EMAIL_HOST=smtp.mailtrap.io
-    EMAIL_PORT=25
-    ```
-
-4.  **Inicia la aplicación**:
-    Para desarrollo activo (con `nodemon` para recargas automáticas al guardar cambios):
-    ```bash
-    npm run dev
-    ```
-    Para un inicio estándar:
-    ```bash
-    npm start
-    ```
-
-5.  **Verifica la instalación**:
-    Una vez que el servidor inicie y la consola muestre el mensaje `DB connection successful!`, abre tu navegador para explorar la documentación interactiva de la API:
-    - 👉 **Swagger Docs**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- **CRUD Completo** para Artículos, Trucos Rápidos, Cheatsheets, Experiencias y Comentarios
+- **Autenticación JWT** con control de acceso basado en roles (`admin` / `user`)
+- **Patrón Strategy** — Estrategias de autenticación intercambiables (`JWTStrategy`, `LocalStrategy`) que extienden una clase base `AuthStrategy`
+- **Patrón Factory** — `handlerFactory.js` genera controladores CRUD reutilizables para cualquier modelo Mongoose
+- **Patrón Repository** — Capa de acceso a datos (`BaseRepository` → `ArticleRepository`, etc.) que desacopla los controladores de Mongoose
+- **Patrón Builder** — `ArticleQueryBuilder` / `QuicktipQueryBuilder` para construcción composable de consultas
+- **Subida de Imágenes** — `multer` (almacenamiento en memoria) + `sharp` para redimensionado a WebP (1200x630 artículos, 200x200 avatares)
+- **Sistema de Comentarios** — Flujo de envío público → aprobación por administrador con rutas anidadas por artículo
+- **Seguridad Avanzada** — Helmet, rate limiting (100 req/hr), sanitización contra inyección NoSQL, protección XSS, HPP
+- **Características de Consulta API** — Filtrado, ordenamiento, selección de campos y paginación mediante la clase `APIFeatures`
+- **Swagger UI** — Documentación interactiva de la API en `/api-docs`
+- **Logging Estructurado** — Winston con transportes de archivo y consola
+- **Email** — Integración con Nodemailer para mensajes del formulario de contacto
 
 ---
 
-## 📂 Estructura del Proyecto
+## Requisitos Previos
 
-| Carpeta / Archivo | Descripción |
+- **Node.js** v18+ (se recomienda v20 LTS)
+- **MongoDB** — Instancia local o clúster en MongoDB Atlas
+- **npm** (incluido con Node.js)
+
+---
+
+## Inicio Rápido
+
+```bash
+# Instalar dependencias
+npm install
+
+# Crear config.env (ver sección de variables de entorno)
+cp config.env.example config.env
+
+# Iniciar en modo desarrollo (nodemon + tsx)
+npm run dev
+```
+
+El servidor inicia en `http://localhost:3000`. Documentación Swagger en `http://localhost:3000/api-docs`.
+
+---
+
+## Variables de Entorno
+
+Crea un archivo `config.env` en la raíz del proyecto:
+
+```env
+NODE_ENV=development
+PORT=3000
+
+# Base de datos
+DATABASE_LOCAL=mongodb://localhost:27017/tech-blog-db
+DATABASE=mongodb+srv://<USUARIO>:<CONTRASEÑA>@cluster0...
+DATABASE_PASSWORD=<CONTRASEÑA>
+
+# JWT
+JWT_SECRET=tu-clave-secreta
+JWT_EXPIRES_IN=90d
+JWT_COOKIE_EXPIRES_IN=90
+
+# Email (Nodemailer)
+EMAIL_USERNAME=tu-usuario
+EMAIL_PASSWORD=tu-contraseña
+EMAIL_HOST=smtp.mailtrap.io
+EMAIL_PORT=25
+
+# CORS (producción)
+ALLOWED_ORIGINS=https://tu-frontend.vercel.app
+
+# Cloudinary (almacenamiento de imágenes en producción)
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+```
+
+---
+
+## Scripts Disponibles
+
+| Comando | Descripción |
 |---|---|
-| `models/` | Esquemas de Mongoose (`Article`, `User`, `Experience`, `Cheatsheet`, `QuickTip`). |
-| `controllers/` | Manejadores de peticiones HTTP y la fábrica genérica `handlerFactory` para operaciones CRUD reutilizables. |
-| `routes/` | Enrutadores de Express que aíslan y organizan los endpoints por recurso. |
-| `utils/` | Manejo global de errores (`AppError`), wrapper asíncrono (`catchAsync`) y lógica avanzada de consultas (`APIFeatures`). |
-| `server.js` | Carga de variables de entorno, conexión a MongoDB e instanciación del servidor HTTP. |
-| `app.js` | Pila de middlewares de Express (seguridad, CORS, compresión) y montaje de rutas. |
-| `swagger.json` | Especificación OpenAPI completa con todos los endpoints, esquemas y ejemplos de la API. |
-| `config.env` | Variables de entorno sensibles (no versionado en Git). |
+| `npm run dev` | Servidor de desarrollo con nodemon + tsx |
+| `npm start` | Inicio estándar (sin recarga automática) |
+| `npm run prod` | Modo producción (`NODE_ENV=production`) |
+| `npm run build` | Verificación de tipos TypeScript (`tsc --noEmit`) |
+| `npm test` | Ejecutar pruebas Jest (MongoDB Memory Server) |
+| `npm run test:verbose` | Salida detallada de pruebas |
 
 ---
 
-## 🔐 Endpoints Principales de la API
+## Estructura del Proyecto
 
-| Método | Ruta | Descripción | Protección |
-|---|---|---|---|
-| `POST` | `/api/v1/users/signup` | Registro de un nuevo usuario | Pública |
-| `POST` | `/api/v1/users/login` | Inicio de sesión (devuelve JWT) | Pública |
-| `GET` | `/api/v1/articles` | Obtener todos los artículos | Pública |
-| `POST` | `/api/v1/articles` | Crear un nuevo artículo | Admin (JWT) |
-| `GET` | `/api/v1/quicktips` | Obtener todos los Quick Tips | Pública |
-| `POST` | `/api/v1/quicktips` | Crear un nuevo Quick Tip | Admin (JWT) |
-| `GET` | `/api/v1/cheatsheets` | Obtener todos los Cheatsheets | Pública |
-| `POST` | `/api/v1/cheatsheets` | Crear un nuevo Cheatsheet | Admin (JWT) |
-| `GET` | `/api/v1/experiences` | Obtener todas las experiencias | Pública |
-| `POST` | `/api/v1/experiences` | Crear una nueva experiencia | Admin (JWT) |
-| `POST` | `/api/v1/contact` | Enviar un mensaje de contacto | Pública |
-
-> 📘 Para consultar **todos** los endpoints disponibles (incluyendo `PATCH`, `DELETE`, filtros avanzados y más), visita la documentación interactiva en **Swagger UI**: `http://localhost:3000/api-docs`
+```
+blog-proyect/
+├── models/                     # Esquemas Mongoose
+│   ├── articleModel.js         # Artículos (con hook de populate para author)
+│   ├── userModel.js            # Usuarios (hashing de contraseña, métodos JWT)
+│   ├── commentModel.js         # Comentarios (flujo de aprobación)
+│   ├── cheatsheetModel.js
+│   ├── quicktipModel.js
+│   └── experienceModel.js
+├── controllers/
+│   ├── handlerFactory.js       # Fábrica CRUD genérica (getAll, getOne, create, update, delete)
+│   ├── articleController.js    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
+│   ├── authController.js       # Login, signup, protect, restrictTo
+│   ├── commentController.js    # Crear, aprobar, listar pendientes/aprobados
+│   ├── errorController.js      # Manejador global de errores (modos dev/prod)
+│   ├── contactController.js
+│   ├── userController.js
+│   └── ...
+├── routes/
+│   ├── articleRoutes.js        # /api/v1/articles (+ rutas anidadas de comentarios)
+│   ├── commentRoutes.js        # /api/v1/articles/:articleId/comments
+│   ├── uploadRoutes.js         # /api/v1/upload (imágenes de artículos, fotos de usuario)
+│   ├── userRoutes.js           # /api/v1/users (auth + CRUD)
+│   ├── feedRoutes.js           # Feed RSS/Atom
+│   └── ...
+├── strategies/                 # Estrategias de autenticación (patrón Strategy)
+│   ├── authStrategy.js         # Clase base
+│   ├── jwtStrategy.js          # Verificación de token JWT
+│   └── localStrategy.js        # Login con email + contraseña
+├── repositories/               # Capa de acceso a datos (patrón Repository)
+│   ├── baseRepository.js
+│   ├── articleRepository.js
+│   ├── cheatsheetRepository.js
+│   └── quicktipRepository.js
+├── builders/                   # Constructores de consultas (patrón Builder)
+│   ├── baseQueryBuilder.js
+│   ├── articleQueryBuilder.js
+│   └── quicktipQueryBuilder.js
+├── utils/
+│   ├── apiFeatures.ts          # Filtrado, ordenamiento y paginación de consultas
+│   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
+│   ├── catchAsync.js           # Wrapper para errores asíncronos
+│   ├── upload.js               # Procesamiento de imágenes con Multer + Sharp
+│   ├── email.js                # Transporte Nodemailer
+│   ├── logger.js               # Logging con Winston
+│   └── validate.js             # Helpers de validación de entrada
+├── tests/
+│   ├── integration/            # Pruebas completas de petición/respuesta
+│   │   ├── article.test.js
+│   │   ├── article-extended.test.js  # Vistas, likes, borradores, búsqueda, relacionados
+│   │   ├── auth.test.js
+│   │   └── comments.test.js          # Ciclo de vida completo de comentarios
+│   ├── models/                 # Pruebas de validación de esquemas
+│   │   ├── articleModel.test.js
+│   │   ├── userModel.test.js
+│   │   └── ...
+│   ├── unit/                   # Pruebas de utilidades
+│   │   ├── apiFeatures.test.js
+│   │   └── appError.test.js
+│   └── setup.js                # Configuración/limpieza de MongoDB Memory Server
+├── types/                      # Definiciones de tipos TypeScript
+├── app.js                      # Stack de middlewares Express + montaje de rutas
+├── server.js                   # Conexión a BD + inicio del servidor HTTP
+├── swagger.json                # Especificación OpenAPI 3.0
+└── jest.config.js              # Configuración de pruebas
+```
 
 ---
 
-## 🧰 Tecnologías Utilizadas
+## Endpoints de la API
+
+Todas las rutas tienen el prefijo `/api/v1/`.
+
+### Públicos
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/articles` | Listar artículos (soporta filtro, ordenamiento, paginación) |
+| `GET` | `/articles/:id` | Obtener artículo individual |
+| `GET` | `/articles/:id/comments` | Obtener comentarios aprobados |
+| `GET` | `/quicktips` | Listar trucos rápidos |
+| `GET` | `/cheatsheets` | Listar cheatsheets |
+| `GET` | `/experiences` | Listar experiencias |
+| `POST` | `/users/signup` | Registro de usuario |
+| `POST` | `/users/login` | Inicio de sesión (devuelve JWT) |
+| `POST` | `/articles/:id/comments` | Enviar comentario (pendiente de aprobación) |
+| `POST` | `/contact` | Enviar mensaje de contacto |
+
+### Protegidos (JWT + Admin)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/articles` | Crear artículo |
+| `PATCH` | `/articles/:id` | Actualizar artículo |
+| `DELETE` | `/articles/:id` | Eliminar artículo |
+| `PATCH` | `/articles/:id/comments/:commentId/approve` | Aprobar comentario |
+| `GET` | `/articles/:id/comments/pending` | Listar comentarios pendientes |
+| `POST` | `/upload/article-image` | Subir + redimensionar portada de artículo |
+| `POST` | `/upload/user-photo` | Subir + redimensionar avatar de usuario |
+
+**Ejemplos de consultas:**
+```
+GET /api/v1/articles?category=Programacion&sort=-createdAt&fields=title,description&page=1&limit=10
+GET /api/v1/articles?views[gte]=100&tags=Angular,TypeScript
+```
+
+Documentación interactiva completa en `/api-docs` (Swagger UI).
+
+---
+
+## Pruebas
+
+Las pruebas usan **Jest** con **MongoDB Memory Server** — no se requiere base de datos externa.
+
+```bash
+# Ejecutar todas las pruebas
+npm test
+
+# Salida detallada
+npm run test:verbose
+```
+
+**Cobertura:** 23 archivos de prueba entre integración, modelos y unitarias.
+
+---
+
+## Patrones de Diseño
+
+| Patrón | Implementación | Propósito |
+|---|---|---|
+| **MVC** | models/ → controllers/ → routes/ | Separación de responsabilidades |
+| **Factory** | `handlerFactory.js` | CRUD reutilizable para cualquier modelo |
+| **Repository** | `repositories/` | Desacopla el acceso a datos de los controladores |
+| **Builder** | `builders/` | Construcción composable de consultas |
+| **Strategy** | `strategies/` | Métodos de autenticación intercambiables |
+
+---
+
+## Tecnologías Utilizadas
 
 | Tecnología | Propósito |
 |---|---|
-| **Node.js** | Entorno de ejecución del servidor |
-| **Express** | Framework web para el manejo de rutas y middlewares |
-| **MongoDB + Mongoose** | Base de datos NoSQL y modelado de datos con ODM |
-| **JWT (jsonwebtoken)** | Autenticación basada en tokens |
-| **Nodemailer** | Envío de correos electrónicos desde el formulario de contacto |
-| **Helmet** | Cabeceras HTTP de seguridad |
-| **Express Rate Limit** | Limitación de peticiones por IP |
-| **XSS-Clean + Mongo-Sanitize** | Sanitización de datos de entrada |
-| **Swagger UI** | Documentación interactiva de la API |
-| **ESLint + Prettier** | Análisis estático de código y formateo consistente |
+| Node.js + Express | Servidor HTTP y enrutamiento |
+| MongoDB + Mongoose | Base de datos y ODM |
+| JWT (jsonwebtoken) | Autenticación basada en tokens |
+| Multer + Sharp | Subida y procesamiento de imágenes |
+| Winston | Logging estructurado |
+| Nodemailer | Envío de emails |
+| Helmet | Cabeceras de seguridad |
+| express-rate-limit | Limitación de peticiones |
+| xss-clean + mongo-sanitize | Sanitización de entrada |
+| Swagger UI | Documentación de la API |
+| Jest + mongodb-memory-server | Pruebas |
+
+---
+
+## Autor
+
+**Diego Polanco** — [Polanco.dev](https://polanco.dev)
