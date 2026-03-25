@@ -12,6 +12,7 @@ La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de
 - **Patrón Factory** — `handlerFactory.js` genera controladores CRUD reutilizables para cualquier modelo Mongoose
 - **Patrón Repository** — Capa de acceso a datos (`BaseRepository` → `ArticleRepository`, etc.) que desacopla los controladores de Mongoose
 - **Patrón Builder** — `ArticleQueryBuilder` / `QuicktipQueryBuilder` para construcción composable de consultas
+- **Endpoint de CV/Resume** — `GET /api/v1/resume/:lang` agrega datos estáticos de perfil (`data/resume.json`) con experiencias dinámicas de MongoDB, disponible en EN y ES
 - **Subida de Imágenes** — `multer` (almacenamiento en memoria) + `sharp` para redimensionado a WebP (1200x630 artículos, 200x200 avatares)
 - **Sistema de Comentarios** — Flujo de envío público → aprobación por administrador con rutas anidadas por artículo
 - **Seguridad Avanzada** — Helmet, rate limiting (100 req/hr), sanitización contra inyección NoSQL, protección XSS, HPP
@@ -86,10 +87,11 @@ CLOUDINARY_API_SECRET=...
 
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Servidor de desarrollo con nodemon + tsx |
-| `npm start` | Inicio estándar (sin recarga automática) |
-| `npm run prod` | Modo producción (`NODE_ENV=production`) |
+| `npm run dev` | Servidor de desarrollo con nodemon + tsx (auto-reload) |
+| `npm start` | Inicio estándar desde build compilado (`dist/server.js`) |
+| `npm run prod` | Modo producción con tsx (`NODE_ENV=production`) |
 | `npm run build` | Verificación de tipos TypeScript (`tsc --noEmit`) |
+| `npm run debug` | Depuración con ndb |
 | `npm test` | Ejecutar pruebas Jest (MongoDB Memory Server) |
 | `npm run test:verbose` | Salida detallada de pruebas |
 
@@ -111,6 +113,7 @@ blog-proyect/
 │   ├── articleController.js    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
 │   ├── authController.js       # Login, signup, protect, restrictTo
 │   ├── commentController.js    # Crear, aprobar, listar pendientes/aprobados
+│   ├── resumeController.js     # Agrega perfil estático + experiencias de BD por idioma
 │   ├── errorController.js      # Manejador global de errores (modos dev/prod)
 │   ├── contactController.js
 │   ├── userController.js
@@ -118,8 +121,10 @@ blog-proyect/
 ├── routes/
 │   ├── articleRoutes.js        # /api/v1/articles (+ rutas anidadas de comentarios)
 │   ├── commentRoutes.js        # /api/v1/articles/:articleId/comments
+│   ├── resumeRoutes.js         # /api/v1/resume/:lang
 │   ├── uploadRoutes.js         # /api/v1/upload (imágenes de artículos, fotos de usuario)
 │   ├── userRoutes.js           # /api/v1/users (auth + CRUD)
+│   ├── contactRoutes.js        # /api/v1/contact
 │   ├── feedRoutes.js           # Feed RSS/Atom
 │   └── ...
 ├── strategies/                 # Estrategias de autenticación (patrón Strategy)
@@ -143,19 +148,26 @@ blog-proyect/
 │   ├── email.js                # Transporte Nodemailer
 │   ├── logger.js               # Logging con Winston
 │   └── validate.js             # Helpers de validación de entrada
+├── data/
+│   └── resume.json             # Datos de perfil estáticos EN/ES (nombre, habilidades, educación, idiomas)
 ├── tests/
 │   ├── integration/            # Pruebas completas de petición/respuesta
 │   │   ├── article.test.js
 │   │   ├── article-extended.test.js  # Vistas, likes, borradores, búsqueda, relacionados
 │   │   ├── auth.test.js
-│   │   └── comments.test.js          # Ciclo de vida completo de comentarios
+│   │   ├── comments.test.js          # Ciclo de vida completo de comentarios
+│   │   └── resume.test.js            # Endpoint de CV (EN/ES, validación de idioma, experiencias)
 │   ├── models/                 # Pruebas de validación de esquemas
 │   │   ├── articleModel.test.js
 │   │   ├── userModel.test.js
 │   │   └── ...
-│   ├── unit/                   # Pruebas de utilidades
+│   ├── unit/                   # Pruebas de utilidades y controladores
 │   │   ├── apiFeatures.test.js
-│   │   └── appError.test.js
+│   │   ├── appError.test.js
+│   │   ├── email.test.js             # Configuración de transporte y envío Nodemailer
+│   │   ├── contactController.test.js # Validación, envío y manejo de errores del formulario
+│   │   ├── errorController.test.js
+│   │   └── upload.test.js
 │   └── setup.js                # Configuración/limpieza de MongoDB Memory Server
 ├── types/                      # Definiciones de tipos TypeScript
 ├── app.js                      # Stack de middlewares Express + montaje de rutas
@@ -180,6 +192,7 @@ Todas las rutas tienen el prefijo `/api/v1/`.
 | `GET` | `/quicktips` | Listar trucos rápidos |
 | `GET` | `/cheatsheets` | Listar cheatsheets |
 | `GET` | `/experiences` | Listar experiencias |
+| `GET` | `/resume/:lang` | Obtener datos del CV en `en` o `es` (perfil + experiencias) |
 | `POST` | `/users/signup` | Registro de usuario |
 | `POST` | `/users/login` | Inicio de sesión (devuelve JWT) |
 | `POST` | `/articles/:id/comments` | Enviar comentario (pendiente de aprobación) |
@@ -201,6 +214,8 @@ Todas las rutas tienen el prefijo `/api/v1/`.
 ```
 GET /api/v1/articles?category=Programacion&sort=-createdAt&fields=title,description&page=1&limit=10
 GET /api/v1/articles?views[gte]=100&tags=Angular,TypeScript
+GET /api/v1/resume/en
+GET /api/v1/resume/es
 ```
 
 Documentación interactiva completa en `/api-docs` (Swagger UI).
@@ -219,7 +234,7 @@ npm test
 npm run test:verbose
 ```
 
-**Cobertura:** 23 archivos de prueba entre integración, modelos y unitarias.
+**Cobertura:** 28+ archivos de prueba entre integración, modelos y unitarias (123+ aserciones).
 
 ---
 

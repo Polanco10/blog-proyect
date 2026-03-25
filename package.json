@@ -4,7 +4,7 @@
   "description": "blog api",
   "main": "app.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node dist/server.js",
     "dev": "nodemon --exec tsx server.js",
     "prod": "NODE_ENV=production tsx server.js",
     "debug": "ndb server.js",
@@ -29,6 +29,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.1",
+    "nodemon": "^3.1.14",
     "sharp": "^0.34.5",
     "swagger-ui-express": "^5.0.0",
     "validator": "^13.11.0",
