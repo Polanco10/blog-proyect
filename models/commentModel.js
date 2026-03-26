@@ -40,5 +40,16 @@ const commentSchema = new mongoose.Schema({
 
 commentSchema.index({ article: 1, approved: 1, createdAt: -1 });
 
+commentSchema.set('toJSON', {
+    virtuals: true,
+    transform: (doc, ret) => {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v;
+        delete ret.email; // no exponer email públicamente
+        return ret;
+    }
+});
+
 const Comment = mongoose.model('Comment', commentSchema);
 module.exports = Comment;

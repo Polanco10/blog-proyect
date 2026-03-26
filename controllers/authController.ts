@@ -10,17 +10,18 @@ const localStrategy = require('../strategies/localStrategy');
 
 interface JwtPayload {
     id: string;
+    role: string;
     iat: number;
 }
 
-const signToken = (id: string): string => {
-    return jwt.sign({ id }, process.env.JWT_SECRET as string, {
+const signToken = (id: string, role: string): string => {
+    return jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
         expiresIn: process.env.JWT_EXPIRES_IN,
     } as jwt.SignOptions);
 };
 
 const createSendToken = (user: any, statusCode: number, req: Request, res: Response): void => {
-    const token = signToken(user._id);
+    const token = signToken(user._id, user.role);
     const cookieOptions = {
         expires: new Date(Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000),
         httpOnly: true,

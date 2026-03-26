@@ -46,8 +46,20 @@ const userSchema = mongoose.Schema({
         default: true,
         select: false
     }
-
-
+}, {
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            ret.id = ret._id;
+            delete ret._id;
+            delete ret.__v;
+            delete ret.role;
+            delete ret.passwordChangedAt;
+            delete ret.passwordResetToken;
+            delete ret.passwordResetExpires;
+            return ret;
+        }
+    }
 });
 
 userSchema.pre('save', async function (next) { //document middleware - para encriptar la password / validacion de documento se hace antes del document middleware
@@ -82,7 +94,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) { //Compara la
 }
 userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex'); // Crear un token para cambiar contraseña
-    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex'); // Encryptar el token para almacenarlo en la base de datos 
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex'); // Encryptar el token para almacenarlo en la base de datos
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;  // Token expira en 10 minutos desde que se solicita
     return resetToken;
 }

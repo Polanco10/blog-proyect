@@ -63,7 +63,7 @@ const limiter = rateLimit({ // Requests validas por IP - max: 100 -> 100 request
     windowMs: 60 * 60 * 1000,
     message: ' Too many request from this IP, please try again in an hour'
 });
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' || process.env.NODE_ENV !== 'development') {
     app.use('/api', limiter); //middleware - afecta a todas las rutas que empiecen con /api
 }
 

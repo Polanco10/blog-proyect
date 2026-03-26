@@ -5,12 +5,14 @@
   "main": "app.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon --exec tsx server.js",
-    "prod": "NODE_ENV=production tsx server.js",
+    "dev": "NODE_ENV=development npx tsx server.js",
+    "prod": "NODE_ENV=production npx tsx server.js",
     "debug": "ndb server.js",
     "build": "tsc --noEmit",
     "test": "jest --forceExit --detectOpenHandles",
-    "test:verbose": "jest --forceExit --detectOpenHandles --verbose"
+    "test:verbose": "jest --forceExit --detectOpenHandles --verbose",
+    "seed:resume": "node data/seed-resume.js",
+    "seed:resume:reset": "node data/seed-resume.js --reset"
   },
   "author": "Diego Polanco",
   "license": "ISC",

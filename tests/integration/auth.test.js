@@ -106,7 +106,7 @@ describe('Auth API - /api/v1/users', () => {
         .send({ ...testUser, email: 'admin@devblog.com' });
       expect(signupRes.statusCode).toBe(201);
       const token = signupRes.body.token;
-      const userId = signupRes.body.data.user._id;
+      const userId = signupRes.body.data.user.id;
 
       // 2. Promover a admin directamente en DB
       const User = require('../../models/userModel');

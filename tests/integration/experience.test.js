@@ -9,103 +9,105 @@ process.env.NODE_ENV = 'test';
 
 jest.setTimeout(30000);
 
-let mongoServer;
-let app;
-let adminToken;
-let createdId;
+let mongoServer, app, adminToken, createdExpId;
+
+const seedResume = async () => {
+    const Resume = require('../../models/resumeModel');
+    return Resume.findOneAndUpdate(
+        { singleton: 'default' },
+        {
+            singleton: 'default',
+            name: 'Diego Polanco', email: 'test@test.com',
+            title:    { en: 'Developer',  es: 'Desarrollador' },
+            location: { en: 'Remote',     es: 'Remoto' },
+            summary:  { en: 'Summary',    es: 'Resumen' },
+            skills:   { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
+            experiences: [],
+        },
+        { upsert: true, new: true }
+    );
+};
 
 const validExperience = {
-  company: 'Acme Corp',
-  role: 'Software Engineer',
-  startDate: '2022-01-01',
-  description: 'Developed and maintained web applications.',
+    company:  'Acme Corp',
+    role:     { en: 'Software Engineer', es: 'Ingeniero de Software' },
+    startDate: '2022-01-01',
+    description: { en: 'Developed web apps.', es: 'Desarrollé aplicaciones web.' },
 };
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
 
-  delete require.cache[require.resolve('../../app')];
-  app = require('../../app');
+    delete require.cache[require.resolve('../../app')];
+    app = require('../../app');
 
-  const User = require('../../models/userModel');
-  await User.create({
-    name: 'Admin User',
-    email: 'admin_exp@test.com',
-    password: 'password123',
-    passwordConfirm: 'password123',
-    role: 'admin',
-  });
+    const User = require('../../models/userModel');
+    await User.create({ name: 'Admin', email: 'admin_exp@test.com',
+        password: 'password123', passwordConfirm: 'password123', role: 'admin' });
 
-  const res = await request(app)
-    .post('/api/v1/users/login')
-    .send({ email: 'admin_exp@test.com', password: 'password123' });
-  adminToken = res.body.token;
+    const res = await request(app).post('/api/v1/users/login')
+        .send({ email: 'admin_exp@test.com', password: 'password123' });
+    adminToken = res.body.token;
+
+    await seedResume();
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+    await mongoose.disconnect();
+    await mongoServer.stop();
 });
 
 describe('Experience API Integration', () => {
-  it('GET /api/v1/experiences — empty collection returns 200 with empty array', async () => {
-    const res = await request(app).get('/api/v1/experiences');
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.experiences).toHaveLength(0);
-  });
+    it('GET /api/v1/experiences — returns 200 with profile and empty array', async () => {
+        const res = await request(app).get('/api/v1/experiences');
+        expect(res.statusCode).toBe(200);
+        expect(res.body.data.experiences).toHaveLength(0);
+        expect(res.body.data).toHaveProperty('profile');
+    });
 
-  it('POST /api/v1/experiences without auth — returns 401', async () => {
-    const res = await request(app).post('/api/v1/experiences').send(validExperience);
-    expect(res.statusCode).toBe(401);
-  });
+    it('POST /api/v1/experiences without auth — returns 401', async () => {
+        const res = await request(app).post('/api/v1/experiences').send(validExperience);
+        expect(res.statusCode).toBe(401);
+    });
 
-  it('POST /api/v1/experiences with admin token — creates experience and returns 201', async () => {
-    const res = await request(app)
-      .post('/api/v1/experiences')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send(validExperience);
+    it('POST /api/v1/experiences with admin — creates experience and returns 201', async () => {
+        const res = await request(app)
+            .post('/api/v1/experiences')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send(validExperience);
 
-    expect(res.statusCode).toBe(201);
-    expect(res.body.data.experience.company).toBe(validExperience.company);
-    expect(res.body.data.experience.role).toBe(validExperience.role);
+        expect(res.statusCode).toBe(201);
+        expect(res.body.data.experience.company).toBe(validExperience.company);
+        expect(res.body.data.experience.role.en).toBe(validExperience.role.en);
+        createdExpId = res.body.data.experience._id;
+    });
 
-    // Experiences use MongoDB _id (no slug), but toJSON hides _id — use GET all to find id
-    const listRes = await request(app).get('/api/v1/experiences');
-    // The virtual 'id' field is deleted by toJSON transform, so use the raw model
-    const Experience = require('../../models/experienceModel');
-    const doc = await Experience.findOne({ company: validExperience.company });
-    createdId = doc._id.toString();
-  });
+    it('POST /api/v1/experiences with missing required field — returns 400', async () => {
+        const res = await request(app)
+            .post('/api/v1/experiences')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ role: { en: 'Engineer', es: 'Ingeniero' } }); // sin company ni startDate
+        expect([400, 500]).toContain(res.statusCode);
+    });
 
-  it('POST /api/v1/experiences with missing required field — returns 400 or 500', async () => {
-    const res = await request(app)
-      .post('/api/v1/experiences')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ role: 'Engineer' }); // missing company and startDate
+    it('PATCH /api/v1/experiences/:id with admin — updates and returns 200', async () => {
+        const res = await request(app)
+            .patch(`/api/v1/experiences/${createdExpId}`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ role: { en: 'Senior Engineer', es: 'Ingeniero Senior' } });
 
-    // Mongoose validation error returns 400 (AppError wraps CastError/ValidationError)
-    expect([400, 500]).toContain(res.statusCode);
-  });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.data.experience.role.en).toBe('Senior Engineer');
+    });
 
-  it('PATCH /api/v1/experiences/:id with admin — updates and returns 200', async () => {
-    const res = await request(app)
-      .patch(`/api/v1/experiences/${createdId}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ role: 'Senior Software Engineer' });
+    it('DELETE /api/v1/experiences/:id with admin — returns 204; GET returns 404', async () => {
+        const delRes = await request(app)
+            .delete(`/api/v1/experiences/${createdExpId}`)
+            .set('Authorization', `Bearer ${adminToken}`);
+        expect(delRes.statusCode).toBe(204);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.experience.role).toBe('Senior Software Engineer');
-  });
-
-  it('DELETE /api/v1/experiences/:id with admin — returns 204; subsequent GET returns 404', async () => {
-    const delRes = await request(app)
-      .delete(`/api/v1/experiences/${createdId}`)
-      .set('Authorization', `Bearer ${adminToken}`);
-
-    expect(delRes.statusCode).toBe(204);
-
-    const getRes = await request(app).get(`/api/v1/experiences/${createdId}`);
-    expect(getRes.statusCode).toBe(404);
-  });
+        const getRes = await request(app).get(`/api/v1/experiences/${createdExpId}`);
+        expect(getRes.statusCode).toBe(404);
+    });
 });

@@ -105,7 +105,7 @@ articleSchema.pre(/^find/, function (next) {  // query middleware - se ejecuta a
     }
     this.populate({ // .populate() hace el "join" cuando se tiene un objectId como referencia dentro de otro documento
         path: 'author', //property del request
-        select: '-__v'
+        select: '-__v -role -_id'
     });
     next();
 })

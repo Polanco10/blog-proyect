@@ -50,16 +50,51 @@ exports.validateSignup = validateFunction({
     passwordConfirm: { required: true, type: 'string', minlength: 8 },
 });
 
-exports.validateExperience = validateFunction({
-    company: { required: true, type: 'string', minlength: 2, maxlength: 100 },
-    role: { required: true, type: 'string', minlength: 2, maxlength: 100 },
-});
+// Validación personalizada para Experience — role/description son objetos { en, es }
+function validateI18nString(field: string, value: any, required: boolean, errors: string[]) {
+    if (required && (!value || (!value.en && !value.es))) {
+        errors.push(`${field}.en and ${field}.es are required`);
+        return;
+    }
+    if (!value) return;
+    if (value.en !== undefined && typeof value.en !== 'string') errors.push(`${field}.en must be a string`);
+    if (value.es !== undefined && typeof value.es !== 'string') errors.push(`${field}.es must be a string`);
+}
 
-// Para PATCH — sin required, solo valida los campos presentes
-exports.validateExperiencePatch = validateFunction({
-    company: { type: 'string', minlength: 2, maxlength: 100 },
-    role: { type: 'string', minlength: 2, maxlength: 100 },
-});
+exports.validateExperience = (req: any, _res: any, next: any) => {
+    const errors: string[] = [];
+    const { company, role, startDate } = req.body;
+
+    if (!company || typeof company !== 'string' || company.trim().length < 2)
+        errors.push('company is required and must be at least 2 characters');
+
+    validateI18nString('role', role, true, errors);
+
+    if (!startDate) errors.push('startDate is required');
+
+    if (errors.length > 0) {
+        const AppErrorClass = require('./appError').default || require('./appError');
+        return next(new AppErrorClass(errors.join('. '), 400));
+    }
+    next();
+};
+
+// PATCH — todos los campos son opcionales
+exports.validateExperiencePatch = (req: any, _res: any, next: any) => {
+    const errors: string[] = [];
+    const { company, role } = req.body;
+
+    if (company !== undefined && (typeof company !== 'string' || company.trim().length < 2))
+        errors.push('company must be at least 2 characters');
+
+    if (role !== undefined) validateI18nString('role', role, false, errors);
+
+    if (errors.length > 0) {
+        const AppErrorClass = require('./appError').default || require('./appError');
+        return next(new AppErrorClass(errors.join('. '), 400));
+    }
+    next();
+};
 
 exports.validateContact = validateFunction({
     name: { required: true, type: 'string', minlength: 2 },

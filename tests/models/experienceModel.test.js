@@ -1,71 +1,84 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const Experience = require('../../models/experienceModel');
+const Resume = require('../../models/resumeModel');
 
 let mongoServer;
 
+const baseProfile = {
+    singleton: 'default',
+    name: 'Diego Polanco',
+    email: 'test@test.com',
+    title:    { en: 'Developer', es: 'Desarrollador' },
+    location: { en: 'Remote',   es: 'Remoto' },
+    summary:  { en: 'Summary',  es: 'Resumen' },
+    skills:   { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
+};
+
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+    await mongoose.disconnect();
+    await mongoServer.stop();
 });
 
 afterEach(async () => {
-  await Experience.deleteMany({});
+    await Resume.deleteMany({});
 });
 
-describe('Experience Model', () => {
-  const validExperienceData = {
-    company: 'Google',
-    role: 'Software Engineer',
-    startDate: new Date('2024-01-01'),
-    description: 'Trabajando en proyectos de IA',
-    achievements: ['Desarrollo de API escalable', 'Optimización de base de datos']
-  };
-
-  it('should create a valid experience correctly', async () => {
-    const experience = await Experience.create(validExperienceData);
-    expect(experience._id).toBeDefined();
-    expect(experience.company).toBe('Google');
-    expect(experience.role).toBe('Software Engineer');
-    expect(experience.achievements).toHaveLength(2);
-  });
-
-  it('should fail without a required company name', async () => {
-    const experienceData = { ...validExperienceData, company: undefined };
-    await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a company name/);
-  });
-
-  it('should fail without a required role', async () => {
-    const experienceData = { ...validExperienceData, role: undefined };
-    await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a role/);
-  });
-
-  it('should fail without a required start date', async () => {
-    const experienceData = { ...validExperienceData, startDate: undefined };
-    await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a start date/);
-  });
-
-  it('should allow creating an experience without description or achievements', async () => {
-    const experienceData = {
-      company: 'Twitter',
-      role: 'Staff Engineer',
-      startDate: new Date('2023-01-01')
+describe('Experience (embedded in Resume)', () => {
+    const validExp = {
+        company:  'Google',
+        role:     { en: 'Software Engineer', es: 'Ingeniero de Software' },
+        startDate: new Date('2024-01-01'),
+        description: { en: 'AI projects', es: 'Proyectos de IA' },
+        achievements: {
+            en: ['Scalable API', 'DB optimisation'],
+            es: ['API escalable', 'Optimización de BD'],
+        },
     };
-    const experience = await Experience.create(experienceData);
-    expect(experience._id).toBeDefined();
-    expect(experience.description).toBeUndefined();
-    expect(experience.achievements).toHaveLength(0);
-  });
 
-  it('should handle an end date (endDate)', async () => {
-    const endDate = new Date('2024-12-31');
-    const experienceData = { ...validExperienceData, endDate };
-    const experience = await Experience.create(experienceData);
-    expect(experience.endDate.toISOString()).toBe(endDate.toISOString());
-  });
+    it('should embed a valid experience in the Resume document', async () => {
+        const doc = await Resume.create({ ...baseProfile, experiences: [validExp] });
+        expect(doc.experiences).toHaveLength(1);
+        expect(doc.experiences[0].company).toBe('Google');
+        expect(doc.experiences[0].role.en).toBe('Software Engineer');
+        expect(doc.experiences[0].achievements.en).toHaveLength(2);
+    });
+
+    it('should fail without company name', async () => {
+        const bad = { ...validExp, company: undefined };
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
+            .rejects.toThrow(/company name/);
+    });
+
+    it('should fail without role', async () => {
+        const bad = { ...validExp, role: undefined };
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
+            .rejects.toThrow(/required/);
+    });
+
+    it('should fail without startDate', async () => {
+        const bad = { ...validExp, startDate: undefined };
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
+            .rejects.toThrow(/start date/);
+    });
+
+    it('should allow experience without description or achievements', async () => {
+        const minimal = {
+            company:  'Twitter',
+            role:     { en: 'Staff Engineer', es: 'Ingeniero Principal' },
+            startDate: new Date('2023-01-01'),
+        };
+        const doc = await Resume.create({ ...baseProfile, experiences: [minimal] });
+        expect(doc.experiences[0].achievements.en).toHaveLength(0);
+    });
+
+    it('should handle endDate', async () => {
+        const endDate = new Date('2024-12-31');
+        const doc = await Resume.create({ ...baseProfile, experiences: [{ ...validExp, endDate }] });
+        expect(doc.experiences[0].endDate.toISOString()).toBe(endDate.toISOString());
+    });
 });

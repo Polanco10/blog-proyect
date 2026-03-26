@@ -78,7 +78,7 @@ describe('POST /api/v1/articles/:articleId/comments', () => {
             .send({ author: 'Tester', email: 'tester@test.com', body: 'Excelente artículo!' });
         expect(res.statusCode).toBe(201);
         expect(res.body.data.comment.approved).toBe(false);
-        commentId = res.body.data.comment._id;
+        commentId = res.body.data.comment.id;
     });
 
     it('a pending comment should not appear in the public listing', async () => {
@@ -121,7 +121,7 @@ describe('PATCH /api/v1/articles/:articleId/comments/:id/approve — approve com
     it('the approved comment should appear in the public listing', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments`);
         expect(res.body.data.comments).toHaveLength(1);
-        expect(res.body.data.comments[0]._id).toBe(commentId);
+        expect(res.body.data.comments[0].id).toBe(commentId);
     });
 });
 
