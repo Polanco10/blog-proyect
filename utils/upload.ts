@@ -1,3 +1,5 @@
+import path from 'path';
+
 const multer = require('multer');
 const sharp = require('sharp');
 const AppError = require('./appError');
@@ -10,8 +12,6 @@ if (process.env.NODE_ENV === 'production') {
     s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
     PutObjectCommand = POC;
 }
-
-const path = require('path');
 
 // Use memory storage — process with sharp before saving
 const multerStorage = multer.memoryStorage();

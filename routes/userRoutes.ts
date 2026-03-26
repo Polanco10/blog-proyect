@@ -1,11 +1,11 @@
-const express = require('express')
+import express, { Router } from 'express';
 const rateLimit = require('express-rate-limit');
-const userController = require('./../controllers/userController')
-const authController = require('./../controllers/authController')
+const userController = require('./../controllers/userController');
+const authController = require('./../controllers/authController');
 const { validateSignup } = require('../utils/validators');
 const { ROLES } = require('../constants');
 
-const router = express.Router(); //  middleware function
+const router: Router = express.Router(); //  middleware function
 
 // Rate limiter específico para forgotPassword — previene enumeración de emails
 const forgotPasswordLimiter = rateLimit({
@@ -33,4 +33,4 @@ router.use(authController.restrictTo(ROLES.ADMIN)); //Aplica authControler.restr
 router.route('/').get(userController.getAllUsers);
 router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);
 
-module.exports = router;
+export = router;

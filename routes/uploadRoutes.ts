@@ -1,12 +1,10 @@
-const express = require('express');
-const path = require('path');
+import express, { Router, Request, Response } from 'express';
 const rateLimit = require('express-rate-limit');
 const { upload, resizeArticleImage, resizeUserPhoto } = require('../utils/upload');
 const authController = require('../controllers/authController');
-const catchAsync = require('../utils/catchAsync');
 const { ROLES } = require('../constants');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Rate limiter para uploads — previene abusos de almacenamiento
 const uploadLimiter = rateLimit({
@@ -24,7 +22,7 @@ router.post(
     authController.restrictTo(ROLES.ADMIN),
     upload.single('image'),
     resizeArticleImage,
-    (req, res) => {
+    (req: Request, res: Response) => {
         res.status(200).json({
             status: 'success',
             data: { url: req.body.imageCover }
@@ -40,7 +38,7 @@ router.post(
     authController.protect,
     upload.single('photo'),
     resizeUserPhoto,
-    (req, res) => {
+    (req: Request, res: Response) => {
         res.status(200).json({
             status: 'success',
             data: { url: req.body.photo }
@@ -48,4 +46,4 @@ router.post(
     }
 );
 
-module.exports = router;
+export = router;

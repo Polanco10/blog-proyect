@@ -1,7 +1,22 @@
-const AppError = require('./appError');
+import AppError from './appError';
+
+interface ValidationRule {
+    required?: boolean;
+    type?: 'string' | 'number';
+    minlength?: number;
+    maxlength?: number;
+    min?: number;
+    max?: number;
+    enum?: string[];
+    isEmail?: boolean;
+}
+
+interface ValidationSchema {
+    [key: string]: ValidationRule;
+}
 
 // Devuelve un middleware que valida req.body contra un schema de reglas
-const validate = (schema) => (req, res, next) => {
+const validate = (schema: ValidationSchema) => (req: any, res: any, next: any) => {
     const errors = [];
 
     for (const [field, rules] of Object.entries(schema)) {
@@ -50,4 +65,4 @@ const validate = (schema) => (req, res, next) => {
     next();
 };
 
-module.exports = validate;
+export default validate;
