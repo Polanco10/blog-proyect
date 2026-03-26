@@ -17,7 +17,7 @@ let adminId;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
-  
+
   delete require.cache[require.resolve('../../app')];
   app = require('../../app');
 
@@ -42,14 +42,19 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
+function slugFromTitle(title) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
 describe('Article API Integration', () => {
   const testArticle = {
     title: 'Test de Integración Final',
     description: 'Descripción del test.',
     category: 'Programacion'
   };
+  const articleSlug = slugFromTitle(testArticle.title);
 
-  it('debería manejar el ciclo de vida completo de un artículo (GET, POST, PATCH, DELETE)', async () => {
+  it('should handle the full article lifecycle (GET, POST, PATCH, DELETE)', async () => {
     // 1. GET ALL (Vacio)
     const resGet = await request(app).get('/api/v1/articles');
     expect(resGet.statusCode).toBe(200);
@@ -61,7 +66,8 @@ describe('Article API Integration', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send(testArticle);
     expect(resPost.statusCode).toBe(201);
-    const articleId = resPost.body.data.article._id;
+    // _id is hidden from response; use slug derived from title for routing
+    const articleId = articleSlug;
 
     // 3. PATCH (Actualizar)
     const resPatch = await request(app)
@@ -77,13 +83,13 @@ describe('Article API Integration', () => {
       .set('Authorization', `Bearer ${adminToken}`);
     expect(resDelete.statusCode).toBe(204);
 
-    // 5. Verificar eliminación
+    // 5. Verificar eliminación via slug lookup
     const Article = require('../../models/articleModel');
-    const check = await Article.findById(articleId);
+    const check = await Article.findOne({ slug: articleId });
     expect(check).toBeNull();
   });
 
-  it('debería denegar acceso a creación sin token', async () => {
+  it('should deny access to creation without a token', async () => {
     const res = await request(app)
       .post('/api/v1/articles')
       .send(testArticle);

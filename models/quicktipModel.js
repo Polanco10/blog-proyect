@@ -29,14 +29,33 @@ const quickTipSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    slug: {
+        type: String,
+        unique: true,
+        index: true,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
         select: false
     }
 }, {
-    toJSON: { virtuals: true },
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            delete ret._id;
+            delete ret.id;
+            delete ret.slug;
+            delete ret.__v;
+            return ret;
+        }
+    },
     toObject: { virtuals: true }
+});
+
+quickTipSchema.pre('save', function (next) {
+    this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    next();
 });
 
 // Indexes para filtrado por lenguaje y nivel

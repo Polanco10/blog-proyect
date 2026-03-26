@@ -10,7 +10,7 @@ exports.getAllQuickTips = catchAsync(async (req, res) => {
     });
 });
 exports.getQuickTip = catchAsync(async (req, res, next) => {
-    const quicktip = await quicktipRepository.findById(req.params.id);
+    const quicktip = await quicktipRepository.findBySlug(req.params.id);
     if (!quicktip)
         return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
@@ -26,7 +26,7 @@ exports.createQuickTip = catchAsync(async (req, res) => {
     });
 });
 exports.updateQuickTip = catchAsync(async (req, res, next) => {
-    const quicktip = await quicktipRepository.updateById(req.params.id, req.body);
+    const quicktip = await quicktipRepository.updateBySlug(req.params.id, req.body);
     if (!quicktip)
         return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
@@ -35,7 +35,7 @@ exports.updateQuickTip = catchAsync(async (req, res, next) => {
     });
 });
 exports.deleteQuickTip = catchAsync(async (req, res, next) => {
-    const quicktip = await quicktipRepository.deleteById(req.params.id);
+    const quicktip = await quicktipRepository.deleteBySlug(req.params.id);
     if (!quicktip)
         return next(new AppError('No document found with that ID', 404));
     res.status(204).json({

@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { upload, resizeArticleImage, resizeUserPhoto } = require('../utils/upload');
 const authController = require('../controllers/authController');
 const catchAsync = require('../utils/catchAsync');
@@ -7,10 +8,18 @@ const { ROLES } = require('../constants');
 
 const router = express.Router();
 
+// Rate limiter para uploads — previene abusos de almacenamiento
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 20,
+    message: 'Too many upload requests. Try again in 1 hour.',
+});
+
 // POST /api/v1/upload/article-image
 // Admin only — upload and resize an article cover image
 router.post(
     '/article-image',
+    uploadLimiter,
     authController.protect,
     authController.restrictTo(ROLES.ADMIN),
     upload.single('image'),
@@ -27,6 +36,7 @@ router.post(
 // Authenticated users can upload their own avatar
 router.post(
     '/user-photo',
+    uploadLimiter,
     authController.protect,
     upload.single('photo'),
     resizeUserPhoto,

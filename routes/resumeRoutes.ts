@@ -1,8 +1,8 @@
-const express = require('express');
+import express, { Router } from 'express';
 const resumeController = require('../controllers/resumeController');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.route('/:lang').get(resumeController.getResume);
 
-module.exports = router;
+export = router;

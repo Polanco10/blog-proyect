@@ -27,7 +27,7 @@ describe('QuickTip Model', () => {
     seniority: 'Junior'
   };
 
-  it('debería crear un quicktip válido', async () => {
+  it('should create a valid quicktip', async () => {
     const doc = await QuickTip.create(validData);
     expect(doc._id).toBeDefined();
     expect(doc.title).toBe('Destructuring en JavaScript');
@@ -36,33 +36,33 @@ describe('QuickTip Model', () => {
     expect(doc.views).toBe(0);
   });
 
-  it('debería fallar sin título requerido', async () => {
+  it('should fail without a required title', async () => {
     const data = { ...validData, title: undefined };
     await expect(QuickTip.create(data)).rejects.toThrow();
   });
 
-  it('debería fallar sin language requerido', async () => {
+  it('should fail without a required language', async () => {
     const data = { ...validData, language: undefined };
     await expect(QuickTip.create(data)).rejects.toThrow();
   });
 
-  it('debería fallar sin codeSnippet requerido', async () => {
+  it('should fail without a required codeSnippet', async () => {
     const data = { ...validData, codeSnippet: undefined };
     await expect(QuickTip.create(data)).rejects.toThrow();
   });
 
-  it('debería usar seniority "Junior" por defecto', async () => {
+  it('should default seniority to "Junior"', async () => {
     const data = { ...validData, seniority: undefined, title: 'Tip sin seniority' };
     const doc = await QuickTip.create(data);
     expect(doc.seniority).toBe('Junior');
   });
 
-  it('debería fallar con seniority inválido', async () => {
+  it('should fail with an invalid seniority value', async () => {
     const data = { ...validData, seniority: 'Experto', title: 'Tip seniority malo' };
     await expect(QuickTip.create(data)).rejects.toThrow();
   });
 
-  it('debería aceptar valores válidos de seniority', async () => {
+  it('should accept valid seniority values', async () => {
     const juniorTip = await QuickTip.create({ ...validData, title: 'Tip Junior' });
     const semiTip = await QuickTip.create({ ...validData, title: 'Tip Semi', seniority: 'Semi-Senior' });
     const seniorTip = await QuickTip.create({ ...validData, title: 'Tip Senior', seniority: 'Senior' });
@@ -71,7 +71,7 @@ describe('QuickTip Model', () => {
     expect(seniorTip.seniority).toBe('Senior');
   });
 
-  it('debería inicializar views en 0 por defecto', async () => {
+  it('should initialize views to 0 by default', async () => {
     const doc = await QuickTip.create(validData);
     expect(doc.views).toBe(0);
   });

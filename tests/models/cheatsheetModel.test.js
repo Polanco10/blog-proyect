@@ -26,29 +26,29 @@ describe('Cheatsheet Model', () => {
     fileUrl: 'https://example.com/python.pdf'
   };
 
-  it('debería crear un cheatsheet válido', async () => {
+  it('should create a valid cheatsheet', async () => {
     const doc = await Cheatsheet.create(validData);
     expect(doc._id).toBeDefined();
     expect(doc.title).toBe('Python Cheat Sheet');
     expect(doc.category).toBe('Backend');
   });
 
-  it('debería fallar sin título requerido', async () => {
+  it('should fail without a required title', async () => {
     const data = { ...validData, title: undefined };
     await expect(Cheatsheet.create(data)).rejects.toThrow();
   });
 
-  it('debería fallar sin descripción requerida', async () => {
+  it('should fail without a required description', async () => {
     const data = { ...validData, description: undefined };
     await expect(Cheatsheet.create(data)).rejects.toThrow();
   });
 
-  it('debería fallar sin fileUrl requerido', async () => {
+  it('should fail without a required fileUrl', async () => {
     const data = { ...validData, fileUrl: undefined };
     await expect(Cheatsheet.create(data)).rejects.toThrow();
   });
 
-  it('debería fallar con título duplicado', async () => {
+  it('should fail with a duplicate title', async () => {
     await Cheatsheet.create(validData);
     await expect(Cheatsheet.create(validData)).rejects.toThrow();
   });

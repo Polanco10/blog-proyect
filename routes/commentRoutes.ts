@@ -1,11 +1,11 @@
-const express = require('express');
+import express, { Router } from 'express';
 const commentController = require('../controllers/commentController');
 const authController = require('../controllers/authController');
 const { validateComment } = require('../utils/validators');
 const { ROLES } = require('../constants');
 
 // mergeParams: true allows access to :articleId from parent router
-const router = express.Router({ mergeParams: true });
+const router: Router = express.Router({ mergeParams: true });
 
 // Public
 router.route('/')
@@ -18,4 +18,4 @@ router.route('/pending').get(commentController.getPendingComments);
 router.route('/:id/approve').patch(commentController.approveComment);
 router.route('/:id').delete(commentController.deleteComment);
 
-module.exports = router;
+export = router;

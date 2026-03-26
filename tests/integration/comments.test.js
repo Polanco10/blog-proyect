@@ -20,6 +20,10 @@ let adminToken;
 let articleId;
 let commentId;
 
+function slugFromTitle(title) {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
 beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
@@ -50,7 +54,8 @@ beforeAll(async () => {
             description: 'Descripción del artículo de prueba para comentarios.',
             category: 'Programacion',
         });
-    articleId = articleRes.body.data.article._id;
+    // _id is hidden from response; derive slug from title for routing
+    articleId = slugFromTitle('Articulo para comentarios test');
 });
 
 afterAll(async () => {
@@ -59,7 +64,7 @@ afterAll(async () => {
 });
 
 describe('GET /api/v1/articles/:articleId/comments', () => {
-    it('debería retornar lista vacía de comentarios aprobados', async () => {
+    it('should return an empty list of approved comments', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments`);
         expect(res.statusCode).toBe(200);
         expect(res.body.data.comments).toHaveLength(0);
@@ -67,7 +72,7 @@ describe('GET /api/v1/articles/:articleId/comments', () => {
 });
 
 describe('POST /api/v1/articles/:articleId/comments', () => {
-    it('debería crear un comentario en estado pendiente', async () => {
+    it('should create a comment in pending state', async () => {
         const res = await request(app)
             .post(`/api/v1/articles/${articleId}/comments`)
             .send({ author: 'Tester', email: 'tester@test.com', body: 'Excelente artículo!' });
@@ -76,12 +81,12 @@ describe('POST /api/v1/articles/:articleId/comments', () => {
         commentId = res.body.data.comment._id;
     });
 
-    it('el comentario pendiente no debería aparecer en la lista pública', async () => {
+    it('a pending comment should not appear in the public listing', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments`);
         expect(res.body.data.comments).toHaveLength(0);
     });
 
-    it('debería rechazar comentario sin body', async () => {
+    it('should reject a comment without a body', async () => {
         const res = await request(app)
             .post(`/api/v1/articles/${articleId}/comments`)
             .send({ author: 'Tester', email: 'tester@test.com' });
@@ -90,12 +95,12 @@ describe('POST /api/v1/articles/:articleId/comments', () => {
 });
 
 describe('GET /api/v1/articles/:articleId/comments/pending — admin pending list', () => {
-    it('debería requerir autenticación', async () => {
+    it('should require authentication', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments/pending`);
         expect(res.statusCode).toBe(401);
     });
 
-    it('debería retornar comentarios pendientes para admin', async () => {
+    it('should return pending comments for an admin', async () => {
         const res = await request(app)
             .get(`/api/v1/articles/${articleId}/comments/pending`)
             .set('Authorization', `Bearer ${adminToken}`);
@@ -105,7 +110,7 @@ describe('GET /api/v1/articles/:articleId/comments/pending — admin pending lis
 });
 
 describe('PATCH /api/v1/articles/:articleId/comments/:id/approve — approve comment', () => {
-    it('debería aprobar el comentario', async () => {
+    it('should approve the comment', async () => {
         const res = await request(app)
             .patch(`/api/v1/articles/${articleId}/comments/${commentId}/approve`)
             .set('Authorization', `Bearer ${adminToken}`);
@@ -113,7 +118,7 @@ describe('PATCH /api/v1/articles/:articleId/comments/:id/approve — approve com
         expect(res.body.data.comment.approved).toBe(true);
     });
 
-    it('el comentario aprobado debería aparecer en la lista pública', async () => {
+    it('the approved comment should appear in the public listing', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments`);
         expect(res.body.data.comments).toHaveLength(1);
         expect(res.body.data.comments[0]._id).toBe(commentId);
@@ -121,14 +126,14 @@ describe('PATCH /api/v1/articles/:articleId/comments/:id/approve — approve com
 });
 
 describe('DELETE /api/v1/articles/:articleId/comments/:id', () => {
-    it('debería eliminar el comentario (admin)', async () => {
+    it('should delete the comment (admin)', async () => {
         const res = await request(app)
             .delete(`/api/v1/articles/${articleId}/comments/${commentId}`)
             .set('Authorization', `Bearer ${adminToken}`);
         expect(res.statusCode).toBe(204);
     });
 
-    it('el comentario eliminado no debería aparecer en la lista pública', async () => {
+    it('the deleted comment should not appear in the public listing', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/comments`);
         expect(res.body.data.comments).toHaveLength(0);
     });

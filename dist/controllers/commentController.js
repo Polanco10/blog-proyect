@@ -1,11 +1,22 @@
+const mongoose = require('mongoose');
 const Comment = require('../models/commentModel');
+const articleRepository = require('../repositories/articleRepository');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logger = require('../utils/logger');
+// Resolve articleId param: accepts MongoDB ObjectId or slug/title
+async function resolveArticleId(param, next) {
+    if (mongoose.isValidObjectId(param)) return param;
+    const article = await articleRepository.findByIdentifier(param);
+    if (!article) { next(new AppError('No article found', 404)); return null; }
+    return article._id;
+}
 // Obtener comentarios aprobados de un artículo
-exports.getCommentsByArticle = catchAsync(async (req, res) => {
+exports.getCommentsByArticle = catchAsync(async (req, res, next) => {
+    const articleId = await resolveArticleId(req.params.articleId, next);
+    if (!articleId) return;
     const comments = await Comment.find({
-        article: req.params.articleId,
+        article: articleId,
         approved: true,
     }).sort('-createdAt').select('-email -__v');
     res.status(200).json({
@@ -15,15 +26,17 @@ exports.getCommentsByArticle = catchAsync(async (req, res) => {
     });
 });
 // Publicar un comentario (requiere aprobación de admin)
-exports.createComment = catchAsync(async (req, res) => {
+exports.createComment = catchAsync(async (req, res, next) => {
+    const articleId = await resolveArticleId(req.params.articleId, next);
+    if (!articleId) return;
     const { author, email, body } = req.body;
     const comment = await Comment.create({
-        article: req.params.articleId,
+        article: articleId,
         author,
         email,
         body,
     });
-    logger.info('New comment pending approval', { articleId: req.params.articleId, author });
+    logger.info('New comment pending approval', { articleId, author });
     res.status(201).json({
         status: 'success',
         message: 'Comment submitted and pending approval.',

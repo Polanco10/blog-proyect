@@ -1,12 +1,26 @@
+import mongoose from 'mongoose';
+import { Request, Response, NextFunction } from 'express';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
 const Comment = require('../models/commentModel');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
+const articleRepository = require('../repositories/articleRepository');
 const logger = require('../utils/logger');
 
+// Resolve articleId param: accepts MongoDB ObjectId or slug/title
+async function resolveArticleId(param: string, next: NextFunction): Promise<string | null> {
+    if (mongoose.isValidObjectId(param)) return param;
+    const article = await articleRepository.findByIdentifier(param);
+    if (!article) { next(new AppError('No article found', 404)); return null; }
+    return article._id;
+}
+
 // Obtener comentarios aprobados de un artículo
-exports.getCommentsByArticle = catchAsync(async (req, res) => {
+exports.getCommentsByArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const articleId = await resolveArticleId(req.params.articleId as string, next);
+    if (!articleId) return;
+
     const comments = await Comment.find({
-        article: req.params.articleId,
+        article: articleId,
         approved: true,
     }).sort('-createdAt').select('-email -__v');
 
@@ -18,15 +32,18 @@ exports.getCommentsByArticle = catchAsync(async (req, res) => {
 });
 
 // Publicar un comentario (requiere aprobación de admin)
-exports.createComment = catchAsync(async (req, res) => {
+exports.createComment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const articleId = await resolveArticleId(req.params.articleId as string, next);
+    if (!articleId) return;
+
     const { author, email, body } = req.body;
     const comment = await Comment.create({
-        article: req.params.articleId,
+        article: articleId,
         author,
         email,
         body,
     });
-    logger.info('New comment pending approval', { articleId: req.params.articleId, author });
+    logger.info('New comment pending approval', { articleId, author });
     res.status(201).json({
         status: 'success',
         message: 'Comment submitted and pending approval.',
@@ -35,7 +52,7 @@ exports.createComment = catchAsync(async (req, res) => {
 });
 
 // Obtener todos los comentarios pendientes — admin
-exports.getPendingComments = catchAsync(async (req, res) => {
+exports.getPendingComments = catchAsync(async (req: Request, res: Response) => {
     const comments = await Comment.find({ approved: false })
         .sort('createdAt')
         .populate({ path: 'article', select: 'title' });
@@ -47,7 +64,7 @@ exports.getPendingComments = catchAsync(async (req, res) => {
 });
 
 // Aprobar un comentario — admin
-exports.approveComment = catchAsync(async (req, res, next) => {
+exports.approveComment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const comment = await Comment.findByIdAndUpdate(
         req.params.id,
         { approved: true },
@@ -58,7 +75,7 @@ exports.approveComment = catchAsync(async (req, res, next) => {
 });
 
 // Eliminar un comentario — admin
-exports.deleteComment = catchAsync(async (req, res, next) => {
+exports.deleteComment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const comment = await Comment.findByIdAndDelete(req.params.id);
     if (!comment) return next(new AppError('No comment found with that ID', 404));
     res.status(204).json({ status: 'success', data: null });

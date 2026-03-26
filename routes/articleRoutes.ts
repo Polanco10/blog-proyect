@@ -27,7 +27,7 @@ router
     );
 
 router
-    .route('/:id')
+    .route('/:title')
     .get(articleController.getArticle)
     .patch(
         authController.protect,
@@ -40,8 +40,8 @@ router
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.deleteArticle);
 
 // Article sub-actions
-router.route('/:id/view').patch(articleController.incrementViews);
-router.route('/:id/like').patch(articleController.likeArticle);
-router.route('/:id/related').get(articleController.getRelatedArticles);
+router.route('/:title/view').patch(articleController.incrementViews);
+router.route('/:title/like').patch(articleController.likeArticle);
+router.route('/:title/related').get(articleController.getRelatedArticles);
 
 module.exports = router;

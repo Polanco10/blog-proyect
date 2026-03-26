@@ -1,10 +1,10 @@
-const express = require('express');
+import express, { Router } from 'express';
 const quicktipController = require('../controllers/quicktipController');
 const authController = require('./../controllers/authController');
-const { validateQuickTip } = require('../utils/validators');
+const { validateQuickTip, validateQuickTipPatch } = require('../utils/validators');
 const { ROLES } = require('../constants');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router
     .route('/')
@@ -14,7 +14,7 @@ router
 router
     .route('/:id')
     .get(quicktipController.getQuickTip)
-    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateQuickTip, quicktipController.updateQuickTip)
+    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateQuickTipPatch, quicktipController.updateQuickTip)
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), quicktipController.deleteQuickTip);
 
-module.exports = router;
+export = router;

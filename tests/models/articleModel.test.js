@@ -30,7 +30,7 @@ describe('Article Model', () => {
     });
   };
 
-  it('debería crear un artículo válido correctamente', async () => {
+  it('should create a valid article correctly', async () => {
     const user = await createTestUser();
     const validArticleData = {
       title: 'Título de Prueba 1',
@@ -46,7 +46,7 @@ describe('Article Model', () => {
     expect(article.views).toBe(0);
   });
 
-  it('debería fallar sin título requerido', async () => {
+  it('should fail without a required title', async () => {
     const user = await createTestUser();
     const articleData = {
       description: 'Descripción sin título',
@@ -55,7 +55,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/An article must have a title/);
   });
 
-  it('debería fallar si el título es demasiado corto (minlength: 10)', async () => {
+  it('should fail if the title is too short (minlength: 10)', async () => {
     const user = await createTestUser();
     const articleData = {
       title: 'Corto',
@@ -65,7 +65,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/An article title must have more or equal then 10 characters/);
   });
 
-  it('debería fallar si el título es demasiado largo (maxlength: 40)', async () => {
+  it('should fail if the title is too long (maxlength: 40)', async () => {
     const user = await createTestUser();
     const articleData = {
       title: 'Este es un título extremadamente largo que supera los cuarenta caracteres permitidos',
@@ -75,7 +75,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/An article title must have less or equal then 40 characters/);
   });
 
-  it('debería fallar sin descripción requerida', async () => {
+  it('should fail without a required description', async () => {
     const user = await createTestUser();
     const articleData = {
       title: 'Título Válido',
@@ -84,7 +84,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/An article must have a description/);
   });
 
-  it('debería fallar sin autor requerido', async () => {
+  it('should fail without a required author', async () => {
     const articleData = {
       title: 'Título Válido',
       description: 'Descripción válida'
@@ -92,7 +92,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/The article must have an author/);
   });
 
-  it('debería fallar con una categoría inválida', async () => {
+  it('should fail with an invalid category', async () => {
     const user = await createTestUser();
     const articleData = {
       title: 'Título Válido',
@@ -103,7 +103,7 @@ describe('Article Model', () => {
     await expect(Article.create(articleData)).rejects.toThrow(/Category is either: Programacion or Idioma/);
   });
 
-  it('debería permitir categorías válidas (Programacion, Idioma)', async () => {
+  it('should allow valid categories (Programacion, Idioma)', async () => {
     const user = await createTestUser();
     const art1 = await Article.create({
       title: 'Título Programacion',
@@ -121,7 +121,7 @@ describe('Article Model', () => {
     expect(art2.category).toBe('Idioma');
   });
 
-  it('debería fallar con títulos duplicados', async () => {
+  it('should fail with duplicate titles', async () => {
     const user = await createTestUser();
     const articleData = {
       title: 'Título Duplicado',

@@ -22,10 +22,43 @@ exports.validateQuickTip = validate({
     seniority: { type: 'string', enum: ['Junior', 'Semi-Senior', 'Senior'] },
 });
 
+// Para PATCH — sin required, solo valida los campos presentes
+exports.validateQuickTipPatch = validate({
+    title: { type: 'string', minlength: 5 },
+    language: { type: 'string', minlength: 1 },
+    codeSnippet: { type: 'string', minlength: 1 },
+    seniority: { type: 'string', enum: ['Junior', 'Semi-Senior', 'Senior'] },
+});
+
 exports.validateCheatsheet = validate({
     title: { required: true, type: 'string', minlength: 3 },
     description: { required: true, type: 'string', minlength: 10 },
     fileUrl: { required: true, type: 'string', minlength: 5 },
+});
+
+// Para PATCH — sin required, solo valida los campos presentes
+exports.validateCheatsheetPatch = validate({
+    title: { type: 'string', minlength: 3 },
+    description: { type: 'string', minlength: 10 },
+    fileUrl: { type: 'string', minlength: 5 },
+});
+
+exports.validateSignup = validate({
+    name: { required: true, type: 'string', minlength: 2, maxlength: 50 },
+    email: { required: true, isEmail: true },
+    password: { required: true, type: 'string', minlength: 8 },
+    passwordConfirm: { required: true, type: 'string', minlength: 8 },
+});
+
+exports.validateExperience = validate({
+    company: { required: true, type: 'string', minlength: 2, maxlength: 100 },
+    role: { required: true, type: 'string', minlength: 2, maxlength: 100 },
+});
+
+// Para PATCH — sin required, solo valida los campos presentes
+exports.validateExperiencePatch = validate({
+    company: { type: 'string', minlength: 2, maxlength: 100 },
+    role: { type: 'string', minlength: 2, maxlength: 100 },
 });
 
 exports.validateContact = validate({

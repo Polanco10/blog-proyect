@@ -11,6 +11,7 @@ const commentSchema = new mongoose.Schema({
         type: String,
         required: [true, 'A comment must have an author name'],
         trim: true,
+        minlength: [2, 'Author name must be at least 2 characters'],
         maxlength: [60, 'Author name must be at most 60 characters'],
     },
     email: {
@@ -18,11 +19,13 @@ const commentSchema = new mongoose.Schema({
         required: [true, 'A comment must have an email'],
         trim: true,
         lowercase: true,
+        match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email'],
     },
     body: {
         type: String,
         required: [true, 'A comment cannot be empty'],
         trim: true,
+        minlength: [3, 'Comment must be at least 3 characters'],
         maxlength: [2000, 'Comment must be at most 2000 characters'],
     },
     approved: {

@@ -27,7 +27,7 @@ describe('Experience Model', () => {
     achievements: ['Desarrollo de API escalable', 'Optimización de base de datos']
   };
 
-  it('debería crear una experiencia válida correctamente', async () => {
+  it('should create a valid experience correctly', async () => {
     const experience = await Experience.create(validExperienceData);
     expect(experience._id).toBeDefined();
     expect(experience.company).toBe('Google');
@@ -35,22 +35,22 @@ describe('Experience Model', () => {
     expect(experience.achievements).toHaveLength(2);
   });
 
-  it('debería fallar sin nombre de empresa (company)', async () => {
+  it('should fail without a required company name', async () => {
     const experienceData = { ...validExperienceData, company: undefined };
     await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a company name/);
   });
 
-  it('debería fallar sin rol (role)', async () => {
+  it('should fail without a required role', async () => {
     const experienceData = { ...validExperienceData, role: undefined };
     await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a role/);
   });
 
-  it('debería fallar sin fecha de inicio (startDate)', async () => {
+  it('should fail without a required start date', async () => {
     const experienceData = { ...validExperienceData, startDate: undefined };
     await expect(Experience.create(experienceData)).rejects.toThrow(/An experience must have a start date/);
   });
 
-  it('debería permitir crear experiencia sin descripción ni logros', async () => {
+  it('should allow creating an experience without description or achievements', async () => {
     const experienceData = {
       company: 'Twitter',
       role: 'Staff Engineer',
@@ -62,7 +62,7 @@ describe('Experience Model', () => {
     expect(experience.achievements).toHaveLength(0);
   });
 
-  it('debería manejar una fecha de fin (endDate)', async () => {
+  it('should handle an end date (endDate)', async () => {
     const endDate = new Date('2024-12-31');
     const experienceData = { ...validExperienceData, endDate };
     const experience = await Experience.create(experienceData);

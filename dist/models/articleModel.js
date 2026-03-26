@@ -55,7 +55,17 @@ const articleSchema = new mongoose.Schema({
         default: true
     }
 }, {
-    toJSON: { virtuals: true }, //para devolver virtuals properties en el response
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            delete ret._id;
+            delete ret.id;
+            delete ret.published;
+            delete ret.slug;
+            delete ret.__v;
+            return ret;
+        }
+    },
     toObject: { virtuals: true } //para devolver virtuals properties en el response
 });
 // Indexes para optimizar búsquedas frecuentes

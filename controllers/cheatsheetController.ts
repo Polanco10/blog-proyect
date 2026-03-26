@@ -1,8 +1,9 @@
+import { Request, Response, NextFunction } from 'express';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
 const cheatsheetRepository = require('../repositories/cheatsheetRepository');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
 
-exports.getAllCheatsheets = catchAsync(async (req, res) => {
+exports.getAllCheatsheets = catchAsync(async (req: Request, res: Response) => {
     const cheatsheets = await cheatsheetRepository.findAll(req.query);
     res.status(200).json({
         status: 'success',
@@ -11,8 +12,8 @@ exports.getAllCheatsheets = catchAsync(async (req, res) => {
     });
 });
 
-exports.getCheatsheet = catchAsync(async (req, res, next) => {
-    const cheatsheet = await cheatsheetRepository.findById(req.params.id);
+exports.getCheatsheet = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const cheatsheet = await cheatsheetRepository.findBySlug(req.params.id);
     if (!cheatsheet) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
         status: 'success',
@@ -20,7 +21,7 @@ exports.getCheatsheet = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.createCheatsheet = catchAsync(async (req, res) => {
+exports.createCheatsheet = catchAsync(async (req: Request, res: Response) => {
     const cheatsheet = await cheatsheetRepository.create(req.body);
     res.status(201).json({
         status: 'success',
@@ -28,8 +29,8 @@ exports.createCheatsheet = catchAsync(async (req, res) => {
     });
 });
 
-exports.updateCheatsheet = catchAsync(async (req, res, next) => {
-    const cheatsheet = await cheatsheetRepository.updateById(req.params.id, req.body);
+exports.updateCheatsheet = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const cheatsheet = await cheatsheetRepository.updateBySlug(req.params.id, req.body);
     if (!cheatsheet) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
         status: 'success',
@@ -37,8 +38,8 @@ exports.updateCheatsheet = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.deleteCheatsheet = catchAsync(async (req, res, next) => {
-    const cheatsheet = await cheatsheetRepository.deleteById(req.params.id);
+exports.deleteCheatsheet = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const cheatsheet = await cheatsheetRepository.deleteBySlug(req.params.id);
     if (!cheatsheet) return next(new AppError('No document found with that ID', 404));
     res.status(204).json({
         status: 'success',

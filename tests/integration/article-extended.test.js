@@ -22,6 +22,10 @@ let app;
 let adminToken;
 let articleId;
 
+function slugFromTitle(title) {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
 const ARTICLE_BASE = {
     title: 'Guia de Testing en Node',
     description: 'Aprende a testear aplicaciones Node.js con Jest y supertest.',
@@ -55,7 +59,8 @@ beforeAll(async () => {
         .post('/api/v1/articles')
         .set('Authorization', `Bearer ${adminToken}`)
         .send(ARTICLE_BASE);
-    articleId = created.body.data.article._id;
+    // _id is hidden from response; derive slug from title for routing
+    articleId = slugFromTitle(ARTICLE_BASE.title);
 });
 
 afterAll(async () => {
@@ -66,7 +71,7 @@ afterAll(async () => {
 // ─── PATCH Validation ────────────────────────────────────────────────────────
 
 describe('PATCH /api/v1/articles/:id — partial update validation', () => {
-    it('debería actualizar solo el título sin requerir otros campos', async () => {
+    it('should update only the title without requiring other fields', async () => {
         const res = await request(app)
             .patch(`/api/v1/articles/${articleId}`)
             .set('Authorization', `Bearer ${adminToken}`)
@@ -75,7 +80,7 @@ describe('PATCH /api/v1/articles/:id — partial update validation', () => {
         expect(res.body.data.article.title).toBe('Guia Actualizada de Testing');
     });
 
-    it('debería rechazar un título demasiado corto', async () => {
+    it('should reject a title that is too short', async () => {
         const res = await request(app)
             .patch(`/api/v1/articles/${articleId}`)
             .set('Authorization', `Bearer ${adminToken}`)
@@ -83,7 +88,7 @@ describe('PATCH /api/v1/articles/:id — partial update validation', () => {
         expect(res.statusCode).toBe(400);
     });
 
-    it('debería rechazar una categoría inválida', async () => {
+    it('should reject an invalid category', async () => {
         const res = await request(app)
             .patch(`/api/v1/articles/${articleId}`)
             .set('Authorization', `Bearer ${adminToken}`)
@@ -95,7 +100,7 @@ describe('PATCH /api/v1/articles/:id — partial update validation', () => {
 // ─── View Increment ───────────────────────────────────────────────────────────
 
 describe('PATCH /api/v1/articles/:id/view — view counter', () => {
-    it('debería incrementar las vistas del artículo', async () => {
+    it('should increment the article view count', async () => {
         const before = await request(app).get(`/api/v1/articles/${articleId}`);
         const viewsBefore = before.body.data.article.views ?? 0;
 
@@ -109,7 +114,7 @@ describe('PATCH /api/v1/articles/:id/view — view counter', () => {
 // ─── Like ────────────────────────────────────────────────────────────────────
 
 describe('PATCH /api/v1/articles/:id/like — like counter', () => {
-    it('debería incrementar los likes del artículo', async () => {
+    it('should increment the article like count', async () => {
         const before = await request(app).get(`/api/v1/articles/${articleId}`);
         const likesBefore = before.body.data.article.likes ?? 0;
 
@@ -126,7 +131,7 @@ describe('PATCH /api/v1/articles/:id/like — like counter', () => {
 // ─── Related Articles ────────────────────────────────────────────────────────
 
 describe('GET /api/v1/articles/:id/related — related articles', () => {
-    it('debería retornar artículos relacionados (array)', async () => {
+    it('should return related articles as an array', async () => {
         const res = await request(app).get(`/api/v1/articles/${articleId}/related`);
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body.data.articles)).toBe(true);
@@ -136,12 +141,12 @@ describe('GET /api/v1/articles/:id/related — related articles', () => {
 // ─── Drafts ──────────────────────────────────────────────────────────────────
 
 describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
-    it('debería requerir autenticación admin', async () => {
+    it('should require admin authentication', async () => {
         const res = await request(app).get('/api/v1/articles/drafts');
         expect(res.statusCode).toBe(401);
     });
 
-    it('debería retornar drafts para admin autenticado', async () => {
+    it('should return drafts for an authenticated admin', async () => {
         const res = await request(app)
             .get('/api/v1/articles/drafts')
             .set('Authorization', `Bearer ${adminToken}`);
@@ -149,7 +154,7 @@ describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
         expect(res.body.status).toBe('success');
     });
 
-    it('debería crear un draft (published: false) y aparece en /drafts', async () => {
+    it('should create a draft (published: false) and have it appear in /drafts', async () => {
         await request(app)
             .post('/api/v1/articles')
             .set('Authorization', `Bearer ${adminToken}`)
@@ -162,7 +167,7 @@ describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
         expect(titles).toContain('Draft Article Test Title');
     });
 
-    it('los drafts no deberían aparecer en la lista pública', async () => {
+    it('drafts should not appear in the public listing', async () => {
         const res = await request(app).get('/api/v1/articles');
         const titles = res.body.data.articles.map((a) => a.title);
         expect(titles).not.toContain('Draft Article Test Title');
@@ -172,13 +177,13 @@ describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 describe('GET /api/v1/articles/search — text search', () => {
-    it('debería retornar 200 con q param', async () => {
+    it('should return 200 with a q param', async () => {
         const res = await request(app).get('/api/v1/articles/search?q=testing');
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe('success');
     });
 
-    it('debería retornar 400 sin q param', async () => {
+    it('should return 400 without a q param', async () => {
         const res = await request(app).get('/api/v1/articles/search');
         expect(res.statusCode).toBe(400);
     });
@@ -187,7 +192,7 @@ describe('GET /api/v1/articles/search — text search', () => {
 // ─── Admin Stats ─────────────────────────────────────────────────────────────
 
 describe('GET /api/v1/articles/admin/stats', () => {
-    it('debería retornar estadísticas con token admin', async () => {
+    it('should return stats with an admin token', async () => {
         const res = await request(app)
             .get('/api/v1/articles/admin/stats')
             .set('Authorization', `Bearer ${adminToken}`);
@@ -195,7 +200,7 @@ describe('GET /api/v1/articles/admin/stats', () => {
         expect(res.body.data).toBeDefined();
     });
 
-    it('debería rechazar sin token', async () => {
+    it('should reject requests without a token', async () => {
         const res = await request(app).get('/api/v1/articles/admin/stats');
         expect(res.statusCode).toBe(401);
     });

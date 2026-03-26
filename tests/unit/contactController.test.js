@@ -8,6 +8,8 @@ jest.mock('../../utils/logger', () => ({
 const sendEmail = require('../../utils/email');
 const contactController = require('../../controllers/contactController');
 
+const flushPromises = () => new Promise(resolve => setImmediate(resolve));
+
 function makeReq(body = {}) {
     return { body };
 }
@@ -137,7 +139,8 @@ describe('contactController.sendContactMessage', () => {
         const req = makeReq(validBody);
         const res = makeRes();
 
-        await contactController.sendContactMessage(req, res, next);
+        contactController.sendContactMessage(req, res, next);
+        await flushPromises();
 
         expect(next).toHaveBeenCalledWith(expect.any(Error));
         expect(res.json).not.toHaveBeenCalled();

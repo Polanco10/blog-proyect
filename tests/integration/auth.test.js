@@ -16,7 +16,7 @@ let app;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
-  
+
   // Clear module cache so app.js picks up test NODE_ENV
   delete require.cache[require.resolve('../../app')];
   app = require('../../app');
@@ -43,7 +43,7 @@ describe('Auth API - /api/v1/users', () => {
   };
 
   describe('POST /signup', () => {
-    it('debería registrar un usuario nuevo y devolver un token JWT', async () => {
+    it('should register a new user and return a JWT token', async () => {
       const res = await request(app)
         .post('/api/v1/users/signup')
         .send(testUser);
@@ -57,7 +57,7 @@ describe('Auth API - /api/v1/users', () => {
   });
 
   describe('POST /login', () => {
-    it('debería iniciar sesión con credenciales válidas y devolver JWT', async () => {
+    it('should log in with valid credentials and return a JWT', async () => {
       // Primero crear el usuario
       await request(app)
         .post('/api/v1/users/signup')
@@ -72,34 +72,34 @@ describe('Auth API - /api/v1/users', () => {
     });
   });
 
-  describe('Rutas Públicas GET', () => {
-    it('debería permitir acceso GET a /articles sin token', async () => {
+  describe('Public GET Routes', () => {
+    it('should allow GET access to /articles without a token', async () => {
       const res = await request(app).get('/api/v1/articles');
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('success');
     });
 
-    it('debería permitir acceso GET a /quicktips sin token', async () => {
+    it('should allow GET access to /quicktips without a token', async () => {
       const res = await request(app).get('/api/v1/quicktips');
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('success');
     });
 
-    it('debería permitir acceso GET a /cheatsheets sin token', async () => {
+    it('should allow GET access to /cheatsheets without a token', async () => {
       const res = await request(app).get('/api/v1/cheatsheets');
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('success');
     });
 
-    it('debería permitir acceso GET a /experiences sin token', async () => {
+    it('should allow GET access to /experiences without a token', async () => {
       const res = await request(app).get('/api/v1/experiences');
       expect(res.statusCode).toBe(200);
       expect(res.body.status).toBe('success');
     });
   });
 
-  describe('Flujo completo: Signup → Login → Crear Artículo', () => {
-    it('debería completar el flujo de auth y crear un artículo como admin', async () => {
+  describe('Full flow: Signup → Login → Create Article', () => {
+    it('should complete the auth flow and create an article as admin', async () => {
       // 1. Signup
       const signupRes = await request(app)
         .post('/api/v1/users/signup')

@@ -15,7 +15,7 @@ const createMockQuery = (data = []) => {
 
 describe('APIFeatures', () => {
   describe('filter()', () => {
-    it('debería excluir campos especiales (page, sort, limit, fields)', () => {
+    it('should exclude special fields (page, sort, limit, fields)', () => {
       const mockQuery = createMockQuery();
       const queryString = { title: 'Test', page: '1', sort: 'title', limit: '10', fields: 'title' };
       const features = new APIFeatures(mockQuery, queryString);
@@ -23,7 +23,7 @@ describe('APIFeatures', () => {
       expect(mockQuery.find).toHaveBeenCalledWith({ title: 'Test' });
     });
 
-    it('debería reemplazar operadores gte, gt, lte, lt con $gte, $gt, etc.', () => {
+    it('should replace operators gte, gt, lte, lt with $gte, $gt, etc.', () => {
       const mockQuery = createMockQuery();
       const queryString = { views: { gte: '100' } };
       const features = new APIFeatures(mockQuery, queryString);
@@ -31,7 +31,7 @@ describe('APIFeatures', () => {
       expect(mockQuery.find).toHaveBeenCalledWith({ views: { $gte: '100' } });
     });
 
-    it('debería retornar `this` para encadenamiento', () => {
+    it('should return `this` for chaining', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, {});
       const result = features.filter();
@@ -40,21 +40,21 @@ describe('APIFeatures', () => {
   });
 
   describe('sort()', () => {
-    it('debería ordenar por el campo especificado', () => {
+    it('should sort by the specified field', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, { sort: 'title' });
       features.sort();
       expect(mockQuery.sort).toHaveBeenCalledWith('title');
     });
 
-    it('debería manejar múltiples campos de orden separados por coma', () => {
+    it('should handle multiple sort fields separated by comma', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, { sort: 'title,author' });
       features.sort();
       expect(mockQuery.sort).toHaveBeenCalledWith('title author');
     });
 
-    it('debería ordenar por -createdAt como valor predeterminado', () => {
+    it('should sort by -createdAt as the default value', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, {});
       features.sort();
@@ -63,14 +63,14 @@ describe('APIFeatures', () => {
   });
 
   describe('limitFields()', () => {
-    it('debería seleccionar solo los campos especificados', () => {
+    it('should select only the specified fields', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, { fields: 'title,description' });
       features.limitFields();
       expect(mockQuery.select).toHaveBeenCalledWith('title description');
     });
 
-    it('debería excluir __v por defecto', () => {
+    it('should exclude __v by default', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, {});
       features.limitFields();
@@ -79,7 +79,7 @@ describe('APIFeatures', () => {
   });
 
   describe('paginate()', () => {
-    it('debería paginar con los valores proporcionados', () => {
+    it('should paginate with the provided values', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, { page: '2', limit: '10' });
       features.paginate();
@@ -87,7 +87,7 @@ describe('APIFeatures', () => {
       expect(mockQuery.limit).toHaveBeenCalledWith(10);
     });
 
-    it('debería usar valores predeterminados (page=1, limit=100)', () => {
+    it('should use default values (page=1, limit=100)', () => {
       const mockQuery = createMockQuery();
       const features = new APIFeatures(mockQuery, {});
       features.paginate();
@@ -96,8 +96,8 @@ describe('APIFeatures', () => {
     });
   });
 
-  describe('encadenamiento completo', () => {
-    it('debería encadenar filter, sort, limitFields y paginate', () => {
+  describe('full chaining', () => {
+    it('should chain filter, sort, limitFields, and paginate', () => {
       const mockQuery = createMockQuery();
       const queryString = { title: 'Test', sort: 'title', fields: 'title,description', page: '1', limit: '5' };
       const features = new APIFeatures(mockQuery, queryString);

@@ -57,11 +57,26 @@ const articleSchema = new mongoose.Schema({
     published: {
         type: Boolean,
         default: true
+    },
+    slug: {
+        type: String,
+        unique: true,
+        index: true,
     }
 
 }, {
-    toJSON: { virtuals: true }, //para devolver virtuals properties en el response
-    toObject: { virtuals: true } //para devolver virtuals properties en el response
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            delete ret._id;
+            delete ret.id;
+            delete ret.published;
+            delete ret.slug;
+            delete ret.__v;
+            return ret;
+        }
+    },
+    toObject: { virtuals: true }
 });
 // Indexes para optimizar búsquedas frecuentes
 articleSchema.index({ category: 1, createdAt: -1 });
@@ -77,6 +92,12 @@ articleSchema.index({ title: 'text', description: 'text' }); // full-text search
 // });
 // articleSchema.statics.nombrefuncion = function(){} // static function - funcion que se puede usar dentro de los model middleware
 // articleSchema.pre('find', function (next) {    // query middleware - se ejecuta antes de query find() - No ocurre con findOne()
+// Genera el slug a partir del título antes de guardar
+articleSchema.pre('save', function (next) {
+    this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    next();
+});
+
 articleSchema.pre(/^find/, function (next) {  // query middleware - se ejecuta antes de cualquier query find
     // Solo mostrar artículos publicados en queries públicas (no cuando se especifica published explícitamente)
     if (this.getFilter().published === undefined && !this._skipPublishedFilter) {

@@ -32,7 +32,7 @@ exports.getAllArticles = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 exports.getArticle = (0, catchAsync_1.default)(async (req, res, next) => {
-    const article = await articleRepository.findById(req.params.id);
+    const article = await articleRepository.findByIdentifier(req.params.title);
     if (!article)
         return next(new appError_1.default('No document found with that ID', 404));
     res.status(200).json({
@@ -48,7 +48,7 @@ exports.createArticle = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 exports.updateArticle = (0, catchAsync_1.default)(async (req, res, next) => {
-    const article = await articleRepository.updateById(req.params.id, req.body);
+    const article = await articleRepository.updateBySlug(req.params.title, req.body);
     if (!article)
         return next(new appError_1.default('No document found with that ID', 404));
     res.status(200).json({
@@ -69,31 +69,31 @@ exports.searchArticles = (0, catchAsync_1.default)(async (req, res, next) => {
     });
 });
 exports.deleteArticle = (0, catchAsync_1.default)(async (req, res, next) => {
-    const article = await articleRepository.deleteById(req.params.id);
+    const article = await articleRepository.deleteBySlug(req.params.title);
     if (!article)
         return next(new appError_1.default('No document found with that ID', 404));
     res.status(204).json({ status: 'success', data: null });
 });
 // Incrementa las vistas de un artículo (llamado cuando el usuario abre el artículo)
 exports.incrementViews = (0, catchAsync_1.default)(async (req, res, next) => {
-    const article = await articleRepository.incrementViews(req.params.id);
+    const article = await articleRepository.incrementViews(req.params.title);
     if (!article)
         return next(new appError_1.default('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { views: article.views } });
 });
 // Like / reacción a un artículo (sin auth — un like por sesión se controla en frontend)
 exports.likeArticle = (0, catchAsync_1.default)(async (req, res, next) => {
-    const article = await articleRepository.incrementLikes(req.params.id);
+    const article = await articleRepository.incrementLikes(req.params.title);
     if (!article)
         return next(new appError_1.default('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { likes: article.likes } });
 });
 // Artículos relacionados — mismo category, excluyendo el actual
 exports.getRelatedArticles = (0, catchAsync_1.default)(async (req, res, next) => {
-    const current = await articleRepository.findById(req.params.id);
+    const current = await articleRepository.findByIdentifier(req.params.title);
     if (!current)
         return next(new appError_1.default('No document found with that ID', 404));
-    const related = await articleRepository.findRelated(req.params.id, current.category);
+    const related = await articleRepository.findRelated(current._id, current.category);
     res.status(200).json({ status: 'success', results: related.length, data: { articles: related } });
 });
 // Borradores — solo admin

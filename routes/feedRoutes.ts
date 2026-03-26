@@ -1,8 +1,8 @@
-const express = require('express');
+import express, { Router, Request, Response } from 'express';
 const Article = require('../models/articleModel');
-const catchAsync = require('../utils/catchAsync');
+import catchAsync from '../utils/catchAsync';
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Escape XML special characters
 const escapeXml = (str = '') =>
@@ -13,14 +13,14 @@ const escapeXml = (str = '') =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
-router.get('/feed.xml', catchAsync(async (req, res) => {
+router.get('/feed.xml', catchAsync(async (req: Request, res: Response) => {
     const siteUrl = process.env.SITE_URL || 'https://polanco.dev';
     const articles = await Article.find({ published: true })
         .sort('-createdAt')
         .limit(20)
         .select('title description createdAt category tags imageCover _id');
 
-    const items = articles.map(a => `
+    const items = articles.map((a: any) => `
     <item>
       <title>${escapeXml(a.title)}</title>
       <link>${siteUrl}/articles/${a._id}</link>
@@ -48,4 +48,4 @@ router.get('/feed.xml', catchAsync(async (req, res) => {
     res.send(rss);
 }));
 
-module.exports = router;
+export = router;

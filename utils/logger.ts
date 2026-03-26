@@ -1,6 +1,6 @@
-const winston = require('winston');
-const DailyRotateFile = require('winston-daily-rotate-file');
-const path = require('path');
+import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+import path from 'path';
 
 const logsDir = path.join(__dirname, '..', 'logs');
 
@@ -56,4 +56,4 @@ if (process.env.NODE_ENV === 'production') {
     );
 }
 
-module.exports = logger;
+export = logger;

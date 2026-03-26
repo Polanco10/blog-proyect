@@ -28,7 +28,15 @@ const experienceSchema = new mongoose.Schema({
         select: false
     }
 }, {
-    toJSON: { virtuals: true },
+    toJSON: {
+        virtuals: true,
+        transform: (doc, ret) => {
+            delete ret._id;
+            delete ret.id;
+            delete ret.__v;
+            return ret;
+        }
+    },
     toObject: { virtuals: true }
 });
 const Experience = mongoose.model('Experience', experienceSchema);

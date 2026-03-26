@@ -1,4 +1,5 @@
-const Experience = require('./../models/experienceModel');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Experience = require('../models/experienceModel');
 const factory = require('./handlerFactory');
 
 exports.getAllExperiences = factory.getAll(Experience);

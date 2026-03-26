@@ -10,6 +10,15 @@ class QuickTipRepository extends BaseRepository {
      * @param {object} queryString
      * @returns {Promise<Document[]>}
      */
+    async findBySlug(slug) {
+        return this.Model.findOne({ slug });
+    }
+    async updateBySlug(slug, data) {
+        return this.Model.findOneAndUpdate({ slug }, data, { new: true, runValidators: true });
+    }
+    async deleteBySlug(slug) {
+        return this.Model.findOneAndDelete({ slug });
+    }
     async findByFilters({ language, seniority } = {}, queryString = {}) {
         const extra = {};
         if (language)

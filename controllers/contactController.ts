@@ -1,8 +1,9 @@
+import { Request, Response, NextFunction } from 'express';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
 const sendEmail = require('../utils/email');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
 
-exports.sendContactMessage = catchAsync(async (req, res, next) => {
+exports.sendContactMessage = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { name, email, subject, message } = req.body;
 
     if (!name || !email || !subject || !message) {

@@ -1,10 +1,10 @@
-const express = require('express');
+import express, { Router } from 'express';
 const cheatsheetController = require('../controllers/cheatsheetController');
 const authController = require('./../controllers/authController');
-const { validateCheatsheet } = require('../utils/validators');
+const { validateCheatsheet, validateCheatsheetPatch } = require('../utils/validators');
 const { ROLES } = require('../constants');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router
     .route('/')
@@ -14,7 +14,7 @@ router
 router
     .route('/:id')
     .get(cheatsheetController.getCheatsheet)
-    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateCheatsheet, cheatsheetController.updateCheatsheet)
+    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateCheatsheetPatch, cheatsheetController.updateCheatsheet)
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), cheatsheetController.deleteCheatsheet);
 
-module.exports = router;
+export = router;

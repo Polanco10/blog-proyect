@@ -2,6 +2,7 @@ const express = require('express')
 const rateLimit = require('express-rate-limit');
 const userController = require('./../controllers/userController')
 const authController = require('./../controllers/authController')
+const { validateSignup } = require('../utils/validators');
 const { ROLES } = require('../constants');
 
 const router = express.Router(); //  middleware function
@@ -14,7 +15,7 @@ const forgotPasswordLimiter = rateLimit({
 });
 
 //routes
-router.post('/signup', authController.signup);
+router.post('/signup', validateSignup, authController.signup);
 router.post('/login', authController.login);
 router.get('/logout', authController.logout);
 router.post('/refresh-token', authController.refreshToken);

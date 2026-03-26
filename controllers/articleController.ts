@@ -29,7 +29,7 @@ export const getAllArticles = catchAsync(async (req: Request, res: Response) => 
 });
 
 export const getArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const article = await articleRepository.findById(req.params.id);
+    const article = await articleRepository.findByIdentifier(req.params.title);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
         status: 'success',
@@ -46,7 +46,7 @@ export const createArticle = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const article = await articleRepository.updateById(req.params.id, req.body);
+    const article = await articleRepository.updateBySlug(req.params.title, req.body);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({
         status: 'success',
@@ -68,30 +68,30 @@ export const searchArticles = catchAsync(async (req: Request, res: Response, nex
 });
 
 export const deleteArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const article = await articleRepository.deleteById(req.params.id);
+    const article = await articleRepository.deleteBySlug(req.params.title);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(204).json({ status: 'success', data: null });
 });
 
 // Incrementa las vistas de un artículo (llamado cuando el usuario abre el artículo)
 export const incrementViews = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const article = await articleRepository.incrementViews(req.params.id);
+    const article = await articleRepository.incrementViews(req.params.title);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { views: article.views } });
 });
 
 // Like / reacción a un artículo (sin auth — un like por sesión se controla en frontend)
 export const likeArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const article = await articleRepository.incrementLikes(req.params.id);
+    const article = await articleRepository.incrementLikes(req.params.title);
     if (!article) return next(new AppError('No document found with that ID', 404));
     res.status(200).json({ status: 'success', data: { likes: article.likes } });
 });
 
 // Artículos relacionados — mismo category, excluyendo el actual
 export const getRelatedArticles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const current = await articleRepository.findById(req.params.id);
+    const current = await articleRepository.findByIdentifier(req.params.title);
     if (!current) return next(new AppError('No document found with that ID', 404));
-    const related = await articleRepository.findRelated(req.params.id, current.category);
+    const related = await articleRepository.findRelated(current._id, current.category);
     res.status(200).json({ status: 'success', results: related.length, data: { articles: related } });
 });
 

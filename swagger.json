@@ -55,6 +55,10 @@
         {
             "name": "Contact",
             "description": "Formulario de contacto por email"
+        },
+        {
+            "name": "Resume",
+            "description": "Datos del CV/Portafolio combinando perfil estático y experiencias dinámicas"
         }
     ],
     "paths": {
@@ -395,9 +399,10 @@
         "/articles/{id}": {
             "get": {
                 "tags": ["Articles"],
-                "summary": "Obtener artículo por ID",
+                "summary": "Obtener artículo por slug",
+                "description": "Busca el artículo por su slug único, generado automáticamente desde el título al crear o actualizar el artículo.",
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "example": "615930d4f37971021d64b413" }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo (generado desde el título)", "example": "guia-completa-de-typescript" }
                 ],
                 "responses": {
                     "200": { "description": "Ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Article" } } } },
@@ -447,9 +452,9 @@
             "patch": {
                 "tags": ["Articles"],
                 "summary": "Incrementar contador de vistas",
-                "description": "Incrementa en 1 el contador de vistas del artículo.",
+                "description": "Incrementa en 1 el contador de vistas del artículo. Recibe el slug del artículo.",
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
                 ],
                 "responses": {
                     "200": { "description": "Vistas incrementadas" },
@@ -461,9 +466,9 @@
             "patch": {
                 "tags": ["Articles"],
                 "summary": "Dar like a un artículo",
-                "description": "Incrementa en 1 el contador de likes del artículo.",
+                "description": "Incrementa en 1 el contador de likes del artículo. Recibe el slug del artículo.",
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
                 ],
                 "responses": {
                     "200": { "description": "Like registrado" },
@@ -475,9 +480,9 @@
             "get": {
                 "tags": ["Articles"],
                 "summary": "Artículos relacionados",
-                "description": "Devuelve hasta 3 artículos de la misma categoría, excluyendo el actual.",
+                "description": "Devuelve hasta 4 artículos de la misma categoría, excluyendo el actual. Recibe el slug del artículo.",
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
                 ],
                 "responses": {
                     "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Article" } } } } },
@@ -852,6 +857,34 @@
                 }
             }
         },
+        "/resume/{lang}": {
+            "get": {
+                "tags": ["Resume"],
+                "summary": "Obtener datos del CV",
+                "description": "Devuelve los datos del CV combinando el perfil estático de `data/resume.json` con las experiencias laborales dinámicas de MongoDB. El campo `slug` en cada artículo permite enlazar directamente desde el PDF generado.",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "enum": ["en", "es"] },
+                        "description": "Idioma del CV",
+                        "example": "en"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del CV obtenidos correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/ResumeResponse" }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/400" }
+                }
+            }
+        },
         "/contact": {
             "post": {
                 "tags": ["Contact"],
@@ -911,34 +944,31 @@
             "Article": {
                 "type": "object",
                 "properties": {
-                    "_id": { "type": "string" },
-                    "title": { "type": "string" },
+                    "_id": { "type": "string", "example": "615930d4f37971021d64b413" },
+                    "slug": { "type": "string", "description": "Slug único generado automáticamente desde el título (solo minúsculas, separado por guiones)", "example": "guia-completa-de-typescript", "readOnly": true },
+                    "title": { "type": "string", "example": "Guía completa de TypeScript" },
                     "description": { "type": "string" },
                     "content": { "type": "string" },
-                    "contentMarkdown": { "type": "string" },
                     "imageCover": { "type": "string" },
                     "category": { "type": "string", "enum": ["Programacion", "Idioma"] },
                     "tags": { "type": "array", "items": { "type": "string" } },
                     "author": { "$ref": "#/components/schemas/User" },
                     "views": { "type": "integer", "default": 0 },
                     "likes": { "type": "integer", "default": 0 },
-                    "status": { "type": "string", "enum": ["draft", "published"], "default": "published" },
-                    "readTime": { "type": "string" },
+                    "published": { "type": "boolean", "default": true, "description": "false = borrador, true = publicado" },
                     "createdAt": { "type": "string", "format": "date-time" }
                 }
             },
             "ArticleInput": {
                 "required": ["title", "description", "category"],
                 "properties": {
-                    "title": { "type": "string", "minLength": 10, "maxLength": 40, "example": "Guía completa de TypeScript" },
+                    "title": { "type": "string", "minLength": 10, "maxLength": 40, "example": "Guía completa de TypeScript", "description": "Título único. El slug se genera automáticamente." },
                     "description": { "type": "string", "example": "Aprende TypeScript desde cero" },
-                    "content": { "type": "string" },
-                    "contentMarkdown": { "type": "string" },
-                    "imageCover": { "type": "string" },
+                    "content": { "type": "string", "description": "Contenido en Markdown" },
+                    "imageCover": { "type": "string", "description": "URL de la imagen de portada (obtenida de POST /upload/article-image)" },
                     "category": { "type": "string", "enum": ["Programacion", "Idioma"] },
                     "tags": { "type": "array", "items": { "type": "string" } },
-                    "status": { "type": "string", "enum": ["draft", "published"] },
-                    "readTime": { "type": "string", "example": "5 min read" }
+                    "published": { "type": "boolean", "default": true, "description": "false para guardar como borrador" }
                 }
             },
             "Comment": {
@@ -1000,12 +1030,64 @@
                 }
             },
             "ContactInput": {
-                "required": ["name", "email", "message"],
+                "required": ["name", "email", "subject", "message"],
                 "properties": {
                     "name": { "type": "string", "example": "Carlos López" },
                     "email": { "type": "string", "format": "email", "example": "carlos@example.com" },
                     "subject": { "type": "string", "example": "Consulta sobre colaboración" },
-                    "message": { "type": "string", "example": "Hola Diego, me gustaría hablar sobre un proyecto..." }
+                    "message": { "type": "string", "minLength": 10, "example": "Hola Diego, me gustaría hablar sobre un proyecto..." }
+                }
+            },
+            "Resume": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "example": "Diego Polanco" },
+                    "title": { "type": "string", "example": "Full Stack Developer" },
+                    "email": { "type": "string", "format": "email" },
+                    "location": { "type": "string", "example": "Latin America (Remote)" },
+                    "website": { "type": "string", "example": "polanco.dev" },
+                    "linkedin": { "type": "string" },
+                    "github": { "type": "string" },
+                    "summary": { "type": "string" },
+                    "skills": {
+                        "type": "object",
+                        "properties": {
+                            "frontend": { "type": "array", "items": { "type": "string" }, "example": ["Angular", "TypeScript"] },
+                            "backend": { "type": "array", "items": { "type": "string" }, "example": ["Node.js", "Express"] },
+                            "tools": { "type": "array", "items": { "type": "string" }, "example": ["Git", "Docker"] }
+                        }
+                    },
+                    "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
+                    "languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageSkill" } },
+                    "experiences": { "type": "array", "items": { "$ref": "#/components/schemas/Experience" } }
+                }
+            },
+            "ResumeResponse": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "resume": { "$ref": "#/components/schemas/Resume" }
+                        }
+                    }
+                }
+            },
+            "Education": {
+                "type": "object",
+                "properties": {
+                    "institution": { "type": "string", "example": "Universidad Nacional" },
+                    "degree": { "type": "string", "example": "Ingeniería en Sistemas" },
+                    "startDate": { "type": "string", "example": "2018" },
+                    "endDate": { "type": "string", "example": "2022" }
+                }
+            },
+            "LanguageSkill": {
+                "type": "object",
+                "properties": {
+                    "language": { "type": "string", "example": "Spanish" },
+                    "level": { "type": "string", "example": "Native" }
                 }
             }
         },
