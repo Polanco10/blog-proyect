@@ -8,7 +8,7 @@
     "dev": "NODE_ENV=development npx tsx server.js",
     "prod": "NODE_ENV=production npx tsx server.js",
     "debug": "ndb server.js",
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "test": "jest --forceExit --detectOpenHandles",
     "test:verbose": "jest --forceExit --detectOpenHandles --verbose",
     "seed:resume": "node data/seed-resume.js",

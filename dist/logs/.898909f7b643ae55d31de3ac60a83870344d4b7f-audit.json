@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/polanco/Documents/GitHub/blog-proyect/dist/logs/.898909f7b643ae55d31de3ac60a83870344d4b7f-audit.json",
+    "files": [
+        {
+            "date": 1774569421822,
+            "name": "/Users/polanco/Documents/GitHub/blog-proyect/dist/logs/combined-2026-03-26.log",
+            "hash": "e5149f15575560e707b3cc00e954f349da2e9cdb831083e2ad5da5fc2feecfd1"
+        }
+    ],
+    "hashType": "sha256"
+}

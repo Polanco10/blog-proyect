@@ -7,12 +7,13 @@ La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de
 ## Características Principales
 
 - **CRUD Completo** para Artículos, Trucos Rápidos, Cheatsheets, Experiencias y Comentarios
+- **Modelo Resume Singleton Bilingüe** — Un único documento MongoDB contiene el perfil completo + las experiencias embebidas como subdocumentos. Los campos de texto (`role`, `description`, `achievements`) se almacenan con estructura `{ en, es }` y se resuelven al idioma solicitado en tiempo de petición
 - **Autenticación JWT** con control de acceso basado en roles (`admin` / `user`)
 - **Patrón Strategy** — Estrategias de autenticación intercambiables (`JWTStrategy`, `LocalStrategy`) que extienden una clase base `AuthStrategy`
 - **Patrón Factory** — `handlerFactory.js` genera controladores CRUD reutilizables para cualquier modelo Mongoose
 - **Patrón Repository** — Capa de acceso a datos (`BaseRepository` → `ArticleRepository`, etc.) que desacopla los controladores de Mongoose
 - **Patrón Builder** — `ArticleQueryBuilder` / `QuicktipQueryBuilder` para construcción composable de consultas
-- **Endpoint de CV/Resume** — `GET /api/v1/resume/:lang` agrega datos estáticos de perfil (`data/resume.json`) con experiencias dinámicas de MongoDB, disponible en EN y ES
+- **Endpoint de CV/Resume** — `GET /api/v1/resume/:lang` resuelve el documento singleton de Resume al idioma solicitado (`en` / `es`) y devuelve perfil + experiencias con todos los campos ya traducidos
 - **Subida de Imágenes** — `multer` (almacenamiento en memoria) + `sharp` para redimensionado a WebP (1200x630 artículos, 200x200 avatares)
 - **Sistema de Comentarios** — Flujo de envío público → aprobación por administrador con rutas anidadas por artículo
 - **Seguridad Avanzada** — Helmet, rate limiting (100 req/hr), sanitización contra inyección NoSQL, protección XSS, HPP
@@ -94,6 +95,8 @@ CLOUDINARY_API_SECRET=...
 | `npm run debug` | Depuración con ndb |
 | `npm test` | Ejecutar pruebas Jest (MongoDB Memory Server) |
 | `npm run test:verbose` | Salida detallada de pruebas |
+| `npm run seed:resume` | Poblar el documento singleton de Resume (perfil + experiencias EN/ES) |
+| `npm run seed:resume:reset` | Eliminar y re-sembrar el documento de Resume desde cero |
 
 ---
 
@@ -107,20 +110,22 @@ blog-proyect/
 │   ├── commentModel.js         # Comentarios (flujo de aprobación)
 │   ├── cheatsheetModel.js
 │   ├── quicktipModel.js
-│   └── experienceModel.js
+│   └── resumeModel.js          # Documento singleton con perfil bilingüe + experiencias embebidas
 ├── controllers/
-│   ├── handlerFactory.js       # Fábrica CRUD genérica (getAll, getOne, create, update, delete)
+│   ├── handlerFactory.ts       # Fábrica CRUD genérica (getAll, getOne, create, update, delete)
 │   ├── articleController.js    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
 │   ├── authController.js       # Login, signup, protect, restrictTo
-│   ├── commentController.js    # Crear, aprobar, listar pendientes/aprobados
-│   ├── resumeController.js     # Agrega perfil estático + experiencias de BD por idioma
-│   ├── errorController.js      # Manejador global de errores (modos dev/prod)
-│   ├── contactController.js
+│   ├── commentController.ts    # Crear, aprobar, listar pendientes/aprobados
+│   ├── experienceController.ts # CRUD de experiencias embebidas (subdocumentos Mongoose)
+│   ├── resumeController.ts     # Resuelve el documento Resume al idioma solicitado (EN/ES)
+│   ├── errorController.ts      # Manejador global de errores (modos dev/prod)
+│   ├── contactController.ts
 │   ├── userController.js
 │   └── ...
 ├── routes/
-│   ├── articleRoutes.js        # /api/v1/articles (+ rutas anidadas de comentarios)
+│   ├── articleRoutes.ts        # /api/v1/articles (+ rutas anidadas de comentarios)
 │   ├── commentRoutes.js        # /api/v1/articles/:articleId/comments
+│   ├── experienceRoutes.js     # /api/v1/experiences (GET lista; POST/PATCH/:id/DELETE/:id)
 │   ├── resumeRoutes.js         # /api/v1/resume/:lang
 │   ├── uploadRoutes.js         # /api/v1/upload (imágenes de artículos, fotos de usuario)
 │   ├── userRoutes.js           # /api/v1/users (auth + CRUD)
@@ -132,8 +137,8 @@ blog-proyect/
 │   ├── jwtStrategy.js          # Verificación de token JWT
 │   └── localStrategy.js        # Login con email + contraseña
 ├── repositories/               # Capa de acceso a datos (patrón Repository)
-│   ├── baseRepository.js
-│   ├── articleRepository.js
+│   ├── baseRepository.ts
+│   ├── articleRepository.ts
 │   ├── cheatsheetRepository.js
 │   └── quicktipRepository.js
 ├── builders/                   # Constructores de consultas (patrón Builder)
@@ -143,19 +148,22 @@ blog-proyect/
 ├── utils/
 │   ├── apiFeatures.ts          # Filtrado, ordenamiento y paginación de consultas
 │   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
-│   ├── catchAsync.js           # Wrapper para errores asíncronos
+│   ├── catchAsync.ts           # Wrapper para errores asíncronos
 │   ├── upload.js               # Procesamiento de imágenes con Multer + Sharp
 │   ├── email.js                # Transporte Nodemailer
-│   ├── logger.js               # Logging con Winston
-│   └── validate.js             # Helpers de validación de entrada
+│   ├── logger.ts               # Logging con Winston
+│   └── validators.js           # Middleware de validación de entrada (express-validator)
 ├── data/
-│   └── resume.json             # Datos de perfil estáticos EN/ES (nombre, habilidades, educación, idiomas)
+│   └── seed-resume.js          # Script de seed: pobla el documento singleton de Resume (perfil + experiencias EN/ES)
 ├── tests/
 │   ├── integration/            # Pruebas completas de petición/respuesta
 │   │   ├── article.test.js
 │   │   ├── article-extended.test.js  # Vistas, likes, borradores, búsqueda, relacionados
 │   │   ├── auth.test.js
 │   │   ├── comments.test.js          # Ciclo de vida completo de comentarios
+│   │   ├── experience.test.js        # CRUD de experiencias embebidas (bilingüe)
+│   │   ├── quicktip.test.js
+│   │   ├── cheatsheet.test.js
 │   │   └── resume.test.js            # Endpoint de CV (EN/ES, validación de idioma, experiencias)
 │   ├── models/                 # Pruebas de validación de esquemas
 │   │   ├── articleModel.test.js
@@ -166,6 +174,7 @@ blog-proyect/
 │   │   ├── appError.test.js
 │   │   ├── email.test.js             # Configuración de transporte y envío Nodemailer
 │   │   ├── contactController.test.js # Validación, envío y manejo de errores del formulario
+│   │   ├── handlerFactory.test.js    # Fábrica CRUD (mocks de Mongoose, sin BD)
 │   │   ├── errorController.test.js
 │   │   └── upload.test.js
 │   └── setup.js                # Configuración/limpieza de MongoDB Memory Server
@@ -191,7 +200,7 @@ Todas las rutas tienen el prefijo `/api/v1/`.
 | `GET` | `/articles/:id/comments` | Obtener comentarios aprobados |
 | `GET` | `/quicktips` | Listar trucos rápidos |
 | `GET` | `/cheatsheets` | Listar cheatsheets |
-| `GET` | `/experiences` | Listar experiencias |
+| `GET` | `/experiences` | Perfil bilingüe + lista de experiencias (campos EN/ES sin resolver) |
 | `GET` | `/resume/:lang` | Obtener datos del CV en `en` o `es` (perfil + experiencias) |
 | `POST` | `/users/signup` | Registro de usuario |
 | `POST` | `/users/login` | Inicio de sesión (devuelve JWT) |
@@ -234,7 +243,7 @@ npm test
 npm run test:verbose
 ```
 
-**Cobertura:** 28+ archivos de prueba entre integración, modelos y unitarias (123+ aserciones).
+**Cobertura:** 30+ archivos de prueba entre integración, modelos y unitarias — **151 tests pasando**.
 
 ---
 

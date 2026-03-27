@@ -578,77 +578,62 @@
         "/experiences": {
             "get": {
                 "tags": ["Experiences"],
-                "summary": "Obtener perfil y experiencias laborales",
-                "description": "Devuelve el perfil bilingüe del CV y el listado de experiencias, ambos con campos EN/ES sin resolver.",
+                "summary": "Listar experiencias laborales",
                 "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "status": { "type": "string", "example": "success" },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "profile": { "$ref": "#/components/schemas/ResumeProfile" },
-                                                "experiences": { "type": "array", "items": { "$ref": "#/components/schemas/Experience" } }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Experience" } } } } }
                 }
             },
             "post": {
                 "tags": ["Experiences"],
                 "summary": "Crear experiencia",
-                "description": "Solo admin. Añade una experiencia al documento singleton de Resume.",
+                "description": "Solo admin.",
                 "security": [{ "bearerAuth": [] }],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
-                            "schema": { "$ref": "#/components/schemas/ExperienceInput" }
+                            "schema": { "$ref": "#/components/schemas/Experience" }
                         }
                     }
                 },
                 "responses": {
-                    "201": { "description": "Experiencia creada", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "data": { "type": "object", "properties": { "experience": { "$ref": "#/components/schemas/Experience" } } } } } } } },
+                    "201": { "description": "Experiencia creada" },
                     "401": { "$ref": "#/components/responses/401" },
                     "403": { "$ref": "#/components/responses/403" }
                 }
             }
         },
         "/experiences/{id}": {
+            "get": {
+                "tags": ["Experiences"],
+                "summary": "Obtener experiencia por ID",
+                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": {
+                    "200": { "description": "Ok" },
+                    "404": { "$ref": "#/components/responses/404" }
+                }
+            },
             "patch": {
                 "tags": ["Experiences"],
                 "summary": "Actualizar experiencia",
-                "description": "Solo admin. Actualiza una experiencia embebida por su _id.",
                 "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "ObjectId de la experiencia embebida" }],
-                "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperienceInput" } } } },
+                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Experience" } } } },
                 "responses": {
                     "200": { "description": "Experiencia actualizada" },
                     "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
+                    "403": { "$ref": "#/components/responses/403" }
                 }
             },
             "delete": {
                 "tags": ["Experiences"],
                 "summary": "Eliminar experiencia",
-                "description": "Solo admin. Elimina una experiencia embebida por su _id.",
                 "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "ObjectId de la experiencia embebida" }],
+                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
                 "responses": {
                     "204": { "description": "Experiencia eliminada" },
                     "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
+                    "403": { "$ref": "#/components/responses/403" }
                 }
             }
         },
@@ -1006,93 +991,17 @@
                     "body": { "type": "string", "example": "Excelente artículo, muy bien explicado." }
                 }
             },
-            "BilingualString": {
-                "type": "object",
-                "description": "Campo con valor en inglés y español",
-                "properties": {
-                    "en": { "type": "string" },
-                    "es": { "type": "string" }
-                },
-                "required": ["en", "es"]
-            },
-            "BilingualStringArray": {
-                "type": "object",
-                "description": "Lista de cadenas bilingüe",
-                "properties": {
-                    "en": { "type": "array", "items": { "type": "string" } },
-                    "es": { "type": "array", "items": { "type": "string" } }
-                }
-            },
             "Experience": {
                 "type": "object",
-                "description": "Experiencia laboral con campos de texto bilingüe (EN/ES sin resolver). Embebida dentro del documento singleton Resume.",
                 "properties": {
-                    "_id": { "type": "string", "description": "ObjectId del subdocumento embebido" },
-                    "company": { "type": "string", "example": "Empresa S.A.", "minLength": 2, "maxLength": 100 },
-                    "role": { "$ref": "#/components/schemas/BilingualString", "description": "Cargo/rol en ambos idiomas" },
-                    "description": { "$ref": "#/components/schemas/BilingualString", "description": "Descripción del puesto en ambos idiomas" },
-                    "achievements": { "$ref": "#/components/schemas/BilingualStringArray", "description": "Logros destacados en ambos idiomas" },
+                    "_id": { "type": "string" },
+                    "company": { "type": "string", "example": "Empresa S.A." },
+                    "role": { "type": "string", "example": "Full Stack Developer" },
+                    "description": { "type": "string" },
                     "startDate": { "type": "string", "format": "date", "example": "2022-01-01" },
                     "endDate": { "type": "string", "format": "date" },
-                    "current": { "type": "boolean", "default": false }
-                }
-            },
-            "ExperienceInput": {
-                "type": "object",
-                "description": "Body para crear o actualizar una experiencia embebida (campos bilingüe requeridos).",
-                "required": ["company", "role", "startDate"],
-                "properties": {
-                    "company": { "type": "string", "example": "Empresa S.A.", "minLength": 2, "maxLength": 100 },
-                    "role": {
-                        "type": "object",
-                        "required": ["en", "es"],
-                        "properties": {
-                            "en": { "type": "string", "example": "Full Stack Developer", "maxLength": 100 },
-                            "es": { "type": "string", "example": "Desarrollador Full Stack", "maxLength": 100 }
-                        }
-                    },
-                    "description": {
-                        "type": "object",
-                        "properties": {
-                            "en": { "type": "string", "maxLength": 1000 },
-                            "es": { "type": "string", "maxLength": 1000 }
-                        }
-                    },
-                    "achievements": {
-                        "type": "object",
-                        "properties": {
-                            "en": { "type": "array", "items": { "type": "string" } },
-                            "es": { "type": "array", "items": { "type": "string" } }
-                        }
-                    },
-                    "startDate": { "type": "string", "format": "date", "example": "2022-01-01" },
-                    "endDate": { "type": "string", "format": "date" },
-                    "current": { "type": "boolean", "default": false }
-                }
-            },
-            "ResumeProfile": {
-                "type": "object",
-                "description": "Perfil del CV con campos bilingüe (retornado por GET /experiences sin resolver el idioma).",
-                "properties": {
-                    "name": { "type": "string", "example": "Diego Polanco" },
-                    "email": { "type": "string", "format": "email", "example": "diego@polanco.dev" },
-                    "website": { "type": "string", "example": "polanco.dev" },
-                    "linkedin": { "type": "string", "example": "linkedin.com/in/dpolanco" },
-                    "github": { "type": "string", "example": "github.com/dpolanco" },
-                    "title": { "$ref": "#/components/schemas/BilingualString" },
-                    "location": { "$ref": "#/components/schemas/BilingualString" },
-                    "summary": { "$ref": "#/components/schemas/BilingualString" },
-                    "skills": {
-                        "type": "object",
-                        "description": "Habilidades técnicas (sin traducción — iguales en ambos idiomas)",
-                        "properties": {
-                            "frontend": { "type": "array", "items": { "type": "string" }, "example": ["Angular", "TypeScript", "Tailwind CSS"] },
-                            "backend": { "type": "array", "items": { "type": "string" }, "example": ["Node.js", "Express", "MongoDB"] },
-                            "tools": { "type": "array", "items": { "type": "string" }, "example": ["Git", "Docker", "AWS"] }
-                        }
-                    },
-                    "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
-                    "languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageSkill" } }
+                    "current": { "type": "boolean", "default": false },
+                    "technologies": { "type": "array", "items": { "type": "string" } }
                 }
             },
             "Cheatsheet": {
@@ -1131,19 +1040,17 @@
             },
             "Resume": {
                 "type": "object",
-                "description": "CV resuelto a un idioma específico (retornado por GET /resume/:lang). Todos los campos bilingüe ya están seleccionados para el idioma solicitado.",
                 "properties": {
                     "name": { "type": "string", "example": "Diego Polanco" },
                     "title": { "type": "string", "example": "Full Stack Developer" },
-                    "email": { "type": "string", "format": "email", "example": "diego@polanco.dev" },
+                    "email": { "type": "string", "format": "email" },
                     "location": { "type": "string", "example": "Latin America (Remote)" },
                     "website": { "type": "string", "example": "polanco.dev" },
-                    "linkedin": { "type": "string", "example": "linkedin.com/in/dpolanco" },
-                    "github": { "type": "string", "example": "github.com/dpolanco" },
+                    "linkedin": { "type": "string" },
+                    "github": { "type": "string" },
                     "summary": { "type": "string" },
                     "skills": {
                         "type": "object",
-                        "description": "Habilidades técnicas (sin traducción)",
                         "properties": {
                             "frontend": { "type": "array", "items": { "type": "string" }, "example": ["Angular", "TypeScript"] },
                             "backend": { "type": "array", "items": { "type": "string" }, "example": ["Node.js", "Express"] },
@@ -1152,23 +1059,7 @@
                     },
                     "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
                     "languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageSkill" } },
-                    "experiences": {
-                        "type": "array",
-                        "description": "Experiencias con campos ya resueltos al idioma solicitado",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "_id": { "type": "string" },
-                                "company": { "type": "string" },
-                                "role": { "type": "string", "description": "Cargo resuelto al idioma" },
-                                "description": { "type": "string", "description": "Descripción resuelta al idioma" },
-                                "achievements": { "type": "array", "items": { "type": "string" }, "description": "Logros resueltos al idioma" },
-                                "startDate": { "type": "string", "format": "date" },
-                                "endDate": { "type": "string", "format": "date" },
-                                "current": { "type": "boolean" }
-                            }
-                        }
-                    }
+                    "experiences": { "type": "array", "items": { "$ref": "#/components/schemas/Experience" } }
                 }
             },
             "ResumeResponse": {
