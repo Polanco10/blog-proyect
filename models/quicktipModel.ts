@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const quickTipSchema = new mongoose.Schema({
     title: {
@@ -42,7 +42,7 @@ const quickTipSchema = new mongoose.Schema({
 }, {
     toJSON: {
         virtuals: true,
-        transform: (doc, ret) => {
+        transform: (doc: any, ret: any) => {
             delete ret._id;
             delete ret.id;
             delete ret.slug;
@@ -64,4 +64,4 @@ quickTipSchema.index({ seniority: 1 });
 quickTipSchema.index({ language: 1, seniority: 1 });
 
 const QuickTip = mongoose.model('QuickTip', quickTipSchema);
-module.exports = QuickTip;
+export = QuickTip;

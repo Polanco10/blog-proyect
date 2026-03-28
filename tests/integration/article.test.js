@@ -76,16 +76,18 @@ describe('Article API Integration', () => {
       .send({ title: 'Título Modificado' });
     expect(resPatch.statusCode).toBe(200);
     expect(resPatch.body.data.article.title).toBe('Título Modificado');
+    // Slug regenerated when title changes
+    const updatedSlug = slugFromTitle('Título Modificado');
 
     // 4. DELETE (Eliminar)
     const resDelete = await request(app)
-      .delete(`/api/v1/articles/${articleId}`)
+      .delete(`/api/v1/articles/${updatedSlug}`)
       .set('Authorization', `Bearer ${adminToken}`);
     expect(resDelete.statusCode).toBe(204);
 
     // 5. Verificar eliminación via slug lookup
     const Article = require('../../models/articleModel');
-    const check = await Article.findOne({ slug: articleId });
+    const check = await Article.findOne({ slug: updatedSlug });
     expect(check).toBeNull();
   });
 

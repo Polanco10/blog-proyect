@@ -30,7 +30,7 @@ export const getAllArticles = catchAsync(async (req: Request, res: Response) => 
 
 export const getArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.findByIdentifier(req.params.title);
-    if (!article) return next(new AppError('No document found with that ID', 404));
+    if (!article) return next(new AppError('Article not found.', 404));
     res.status(200).json({
         status: 'success',
         data: { article },
@@ -46,8 +46,19 @@ export const createArticle = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // If the title is changing, regenerate the slug and check for conflicts
+    if (req.body.title) {
+        const newSlug = req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        // A conflict exists when another article already holds the new slug
+        const existing = await articleRepository.Model.findOne({ slug: newSlug }).lean();
+        if (existing && (existing as any).slug !== req.params.title) {
+            return next(new AppError('An article with this title already exists.', 409));
+        }
+        req.body.slug = newSlug;
+    }
+
     const article = await articleRepository.updateBySlug(req.params.title, req.body);
-    if (!article) return next(new AppError('No document found with that ID', 404));
+    if (!article) return next(new AppError('Article not found.', 404));
     res.status(200).json({
         status: 'success',
         data: { article },
@@ -69,28 +80,28 @@ export const searchArticles = catchAsync(async (req: Request, res: Response, nex
 
 export const deleteArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.deleteBySlug(req.params.title);
-    if (!article) return next(new AppError('No document found with that ID', 404));
+    if (!article) return next(new AppError('Article not found.', 404));
     res.status(204).json({ status: 'success', data: null });
 });
 
 // Incrementa las vistas de un artículo (llamado cuando el usuario abre el artículo)
 export const incrementViews = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.incrementViews(req.params.title);
-    if (!article) return next(new AppError('No document found with that ID', 404));
+    if (!article) return next(new AppError('Article not found.', 404));
     res.status(200).json({ status: 'success', data: { views: article.views } });
 });
 
 // Like / reacción a un artículo (sin auth — un like por sesión se controla en frontend)
 export const likeArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const article = await articleRepository.incrementLikes(req.params.title);
-    if (!article) return next(new AppError('No document found with that ID', 404));
+    if (!article) return next(new AppError('Article not found.', 404));
     res.status(200).json({ status: 'success', data: { likes: article.likes } });
 });
 
 // Artículos relacionados — mismo category, excluyendo el actual
 export const getRelatedArticles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const current = await articleRepository.findByIdentifier(req.params.title);
-    if (!current) return next(new AppError('No document found with that ID', 404));
+    if (!current) return next(new AppError('Article not found.', 404));
     const related = await articleRepository.findRelated(current._id, current.category);
     res.status(200).json({ status: 'success', results: related.length, data: { articles: related } });
 });

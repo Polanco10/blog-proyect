@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { CATEGORIES } = require('../constants');
+import mongoose from 'mongoose';
+import { CATEGORIES } from '../constants';
 // const validator = require('validator');
 
 const articleSchema = new mongoose.Schema({
@@ -67,7 +67,7 @@ const articleSchema = new mongoose.Schema({
 }, {
     toJSON: {
         virtuals: true,
-        transform: (doc, ret) => {
+        transform: (doc: any, ret: any) => {
             delete ret._id;
             delete ret.id;
             delete ret.published;
@@ -98,7 +98,7 @@ articleSchema.pre('save', function (next) {
     next();
 });
 
-articleSchema.pre(/^find/, function (next) {  // query middleware - se ejecuta antes de cualquier query find
+articleSchema.pre(/^find/, function (this: any, next) {  // query middleware - se ejecuta antes de cualquier query find
     // Solo mostrar artículos publicados en queries públicas (no cuando se especifica published explícitamente)
     if (this.getFilter().published === undefined && !this._skipPublishedFilter) {
         this.where({ published: true });
@@ -118,4 +118,4 @@ articleSchema.pre(/^find/, function (next) {  // query middleware - se ejecuta a
 
 const Article = mongoose.model('Article', articleSchema);
 
-module.exports = Article
+export = Article

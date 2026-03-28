@@ -1,10 +1,10 @@
-const crypto = require('crypto')
-const mongoose = require('mongoose');
-const validator = require('validator');
-const bcrypt = require('bcryptjs');
-const { ROLES } = require('../constants');
+import crypto from 'crypto'
+import mongoose from 'mongoose';
+import validator from 'validator';
+import bcrypt from 'bcryptjs';
+import { ROLES } from '../constants';
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Please tell us your name']
@@ -49,7 +49,7 @@ const userSchema = mongoose.Schema({
 }, {
     toJSON: {
         virtuals: true,
-        transform: (doc, ret) => {
+        transform: (doc: any, ret: any) => {
             ret.id = ret._id;
             delete ret._id;
             delete ret.__v;
@@ -87,7 +87,7 @@ userSchema.methods.correctPassword = async function (candidatePassword, userPass
 }
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) { //Compara la fecha en que se cambio la password con la fecha en que se loggeo
     if (this.passwordChangedAt) {
-        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+        const changedTimestamp = parseInt(String(this.passwordChangedAt.getTime() / 1000), 10);
         return JWTTimestamp < changedTimestamp
     }
     return false;
@@ -100,4 +100,4 @@ userSchema.methods.createPasswordResetToken = function () {
 }
 
 const User = mongoose.model('User', userSchema);
-module.exports = User;
+export = User;

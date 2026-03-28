@@ -112,9 +112,25 @@
             "get": {
                 "tags": ["Authentication"],
                 "summary": "Cerrar sesión",
-                "description": "Invalida la cookie de sesión JWT.",
+                "description": "Invalida la cookie de sesión JWT y añade el token a la blacklist. Requiere autenticación con rol admin.",
+                "security": [{ "bearerAuth": [] }],
                 "responses": {
-                    "200": { "description": "Sesión cerrada correctamente" }
+                    "200": { "description": "Sesión cerrada correctamente" },
+                    "401": { "$ref": "#/components/responses/401" },
+                    "403": { "$ref": "#/components/responses/403" }
+                }
+            }
+        },
+        "/users/refresh-token": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Refrescar token JWT",
+                "description": "Genera un nuevo token JWT a partir del token actual (aceptado hasta 7 días después de su expiración). Requiere autenticación con rol admin.",
+                "security": [{ "bearerAuth": [] }],
+                "responses": {
+                    "200": { "description": "Nuevo token generado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
+                    "401": { "$ref": "#/components/responses/401" },
+                    "403": { "$ref": "#/components/responses/403" }
                 }
             }
         },
@@ -452,12 +468,15 @@
             "patch": {
                 "tags": ["Articles"],
                 "summary": "Incrementar contador de vistas",
-                "description": "Incrementa en 1 el contador de vistas del artículo. Recibe el slug del artículo.",
+                "description": "Incrementa en 1 el contador de vistas del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 10 minutos.",
+                "security": [{ "bearerAuth": [] }],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo" }
                 ],
                 "responses": {
                     "200": { "description": "Vistas incrementadas" },
+                    "401": { "$ref": "#/components/responses/401" },
+                    "403": { "$ref": "#/components/responses/403" },
                     "404": { "$ref": "#/components/responses/404" }
                 }
             }
@@ -466,12 +485,15 @@
             "patch": {
                 "tags": ["Articles"],
                 "summary": "Dar like a un artículo",
-                "description": "Incrementa en 1 el contador de likes del artículo. Recibe el slug del artículo.",
+                "description": "Incrementa en 1 el contador de likes del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 24 horas.",
+                "security": [{ "bearerAuth": [] }],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo" }
                 ],
                 "responses": {
                     "200": { "description": "Like registrado" },
+                    "401": { "$ref": "#/components/responses/401" },
+                    "403": { "$ref": "#/components/responses/403" },
                     "404": { "$ref": "#/components/responses/404" }
                 }
             }
@@ -505,7 +527,8 @@
             "post": {
                 "tags": ["Comments"],
                 "summary": "Enviar comentario",
-                "description": "Envía un comentario para un artículo. Queda en estado pendiente hasta ser aprobado por un admin.",
+                "description": "Crea un comentario para un artículo. Queda en estado pendiente hasta ser aprobado. Requiere autenticación con rol admin.",
+                "security": [{ "bearerAuth": [] }],
                 "parameters": [
                     { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } }
                 ],
@@ -519,7 +542,9 @@
                 },
                 "responses": {
                     "201": { "description": "Comentario enviado, pendiente de aprobación" },
-                    "400": { "$ref": "#/components/responses/400" }
+                    "400": { "$ref": "#/components/responses/400" },
+                    "401": { "$ref": "#/components/responses/401" },
+                    "403": { "$ref": "#/components/responses/403" }
                 }
             }
         },

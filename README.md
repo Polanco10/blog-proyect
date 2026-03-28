@@ -15,8 +15,8 @@ La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de
 - **Patrón Builder** — `ArticleQueryBuilder` / `QuicktipQueryBuilder` para construcción composable de consultas
 - **Endpoint de CV/Resume** — `GET /api/v1/resume/:lang` resuelve el documento singleton de Resume al idioma solicitado (`en` / `es`) y devuelve perfil + experiencias con todos los campos ya traducidos
 - **Subida de Imágenes** — `multer` (almacenamiento en memoria) + `sharp` para redimensionado a WebP (1200x630 artículos, 200x200 avatares)
-- **Sistema de Comentarios** — Flujo de envío público → aprobación por administrador con rutas anidadas por artículo
-- **Seguridad Avanzada** — Helmet, rate limiting (100 req/hr), sanitización contra inyección NoSQL, protección XSS, HPP
+- **Sistema de Comentarios** — Creación y moderación exclusiva para admin (crear, aprobar, eliminar) con rutas anidadas por artículo
+- **Seguridad Avanzada** — Helmet, rate limiting (100 req/hr + limitadores específicos para login, vistas, likes), sanitización contra inyección NoSQL, protección XSS, HPP, cookies `sameSite: strict`, verificación de algoritmo JWT (`HS256`), blacklist de tokens al logout
 - **Características de Consulta API** — Filtrado, ordenamiento, selección de campos y paginación mediante la clase `APIFeatures`
 - **Swagger UI** — Documentación interactiva de la API en `/api-docs`
 - **Logging Estructurado** — Winston con transportes de archivo y consola
@@ -104,33 +104,33 @@ CLOUDINARY_API_SECRET=...
 
 ```
 blog-proyect/
-├── models/                     # Esquemas Mongoose
-│   ├── articleModel.js         # Artículos (con hook de populate para author)
-│   ├── userModel.js            # Usuarios (hashing de contraseña, métodos JWT)
-│   ├── commentModel.js         # Comentarios (flujo de aprobación)
-│   ├── cheatsheetModel.js
-│   ├── quicktipModel.js
-│   └── resumeModel.js          # Documento singleton con perfil bilingüe + experiencias embebidas
-├── controllers/
+├── models/                     # Esquemas Mongoose (TypeScript)
+│   ├── articleModel.ts         # Artículos (con hook de populate para author)
+│   ├── userModel.ts            # Usuarios (hashing de contraseña, métodos JWT)
+│   ├── commentModel.ts         # Comentarios (flujo de aprobación)
+│   ├── cheatsheetModel.ts
+│   ├── quicktipModel.ts
+│   └── resumeModel.ts          # Documento singleton con perfil bilingüe + experiencias embebidas
+├── controllers/                # TypeScript
 │   ├── handlerFactory.ts       # Fábrica CRUD genérica (getAll, getOne, create, update, delete)
-│   ├── articleController.js    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
-│   ├── authController.js       # Login, signup, protect, restrictTo
+│   ├── articleController.ts    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
+│   ├── authController.ts       # Login, signup, protect, restrictTo, refresh-token, blacklist
 │   ├── commentController.ts    # Crear, aprobar, listar pendientes/aprobados
 │   ├── experienceController.ts # CRUD de experiencias embebidas (subdocumentos Mongoose)
 │   ├── resumeController.ts     # Resuelve el documento Resume al idioma solicitado (EN/ES)
 │   ├── errorController.ts      # Manejador global de errores (modos dev/prod)
 │   ├── contactController.ts
-│   ├── userController.js
+│   ├── userController.ts
 │   └── ...
-├── routes/
+├── routes/                     # TypeScript
 │   ├── articleRoutes.ts        # /api/v1/articles (+ rutas anidadas de comentarios)
-│   ├── commentRoutes.js        # /api/v1/articles/:articleId/comments
-│   ├── experienceRoutes.js     # /api/v1/experiences (GET lista; POST/PATCH/:id/DELETE/:id)
-│   ├── resumeRoutes.js         # /api/v1/resume/:lang
-│   ├── uploadRoutes.js         # /api/v1/upload (imágenes de artículos, fotos de usuario)
-│   ├── userRoutes.js           # /api/v1/users (auth + CRUD)
-│   ├── contactRoutes.js        # /api/v1/contact
-│   ├── feedRoutes.js           # Feed RSS/Atom
+│   ├── commentRoutes.ts        # /api/v1/articles/:articleId/comments
+│   ├── experienceRoutes.ts     # /api/v1/experiences (GET lista; POST/PATCH/:id/DELETE/:id)
+│   ├── resumeRoutes.ts         # /api/v1/resume/:lang
+│   ├── uploadRoutes.ts         # /api/v1/upload (imágenes de artículos, fotos de usuario)
+│   ├── userRoutes.ts           # /api/v1/users (auth + CRUD)
+│   ├── contactRoutes.ts        # /api/v1/contact
+│   ├── feedRoutes.ts           # Feed RSS/Atom
 │   └── ...
 ├── strategies/                 # Estrategias de autenticación (patrón Strategy)
 │   ├── authStrategy.js         # Clase base
@@ -139,8 +139,8 @@ blog-proyect/
 ├── repositories/               # Capa de acceso a datos (patrón Repository)
 │   ├── baseRepository.ts
 │   ├── articleRepository.ts
-│   ├── cheatsheetRepository.js
-│   └── quicktipRepository.js
+│   ├── cheatsheetRepository.ts
+│   └── quicktipRepository.ts
 ├── builders/                   # Constructores de consultas (patrón Builder)
 │   ├── baseQueryBuilder.js
 │   ├── articleQueryBuilder.js
@@ -149,10 +149,11 @@ blog-proyect/
 │   ├── apiFeatures.ts          # Filtrado, ordenamiento y paginación de consultas
 │   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
 │   ├── catchAsync.ts           # Wrapper para errores asíncronos
+│   ├── tokenBlacklist.ts       # In-memory JWT blacklist con auto-purge
 │   ├── upload.js               # Procesamiento de imágenes con Multer + Sharp
 │   ├── email.js                # Transporte Nodemailer
 │   ├── logger.ts               # Logging con Winston
-│   └── validators.js           # Middleware de validación de entrada (express-validator)
+│   └── validators.ts           # Middleware de validación de entrada (express-validator)
 ├── data/
 │   └── seed-resume.js          # Script de seed: pobla el documento singleton de Resume (perfil + experiencias EN/ES)
 ├── tests/
@@ -191,29 +192,34 @@ blog-proyect/
 
 Todas las rutas tienen el prefijo `/api/v1/`.
 
-### Públicos
+### Públicos (solo lectura + contacto)
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/articles` | Listar artículos (soporta filtro, ordenamiento, paginación) |
 | `GET` | `/articles/:id` | Obtener artículo individual |
+| `GET` | `/articles/:id/related` | Artículos relacionados (misma categoría) |
 | `GET` | `/articles/:id/comments` | Obtener comentarios aprobados |
 | `GET` | `/quicktips` | Listar trucos rápidos |
 | `GET` | `/cheatsheets` | Listar cheatsheets |
-| `GET` | `/experiences` | Perfil bilingüe + lista de experiencias (campos EN/ES sin resolver) |
+| `GET` | `/experiences` | Perfil bilingüe + lista de experiencias |
 | `GET` | `/resume/:lang` | Obtener datos del CV en `en` o `es` (perfil + experiencias) |
 | `POST` | `/users/signup` | Registro de usuario |
 | `POST` | `/users/login` | Inicio de sesión (devuelve JWT) |
-| `POST` | `/articles/:id/comments` | Enviar comentario (pendiente de aprobación) |
 | `POST` | `/contact` | Enviar mensaje de contacto |
 
 ### Protegidos (JWT + Admin)
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| `GET` | `/users/logout` | Cerrar sesión (blacklist del token) |
+| `POST` | `/users/refresh-token` | Refrescar token JWT |
 | `POST` | `/articles` | Crear artículo |
 | `PATCH` | `/articles/:id` | Actualizar artículo |
 | `DELETE` | `/articles/:id` | Eliminar artículo |
+| `PATCH` | `/articles/:id/view` | Incrementar vistas (rate limited) |
+| `PATCH` | `/articles/:id/like` | Dar like (rate limited) |
+| `POST` | `/articles/:id/comments` | Crear comentario (pendiente de aprobación) |
 | `PATCH` | `/articles/:id/comments/:commentId/approve` | Aprobar comentario |
 | `GET` | `/articles/:id/comments/pending` | Listar comentarios pendientes |
 | `POST` | `/upload/article-image` | Subir + redimensionar portada de artículo |
@@ -243,7 +249,7 @@ npm test
 npm run test:verbose
 ```
 
-**Cobertura:** 30+ archivos de prueba entre integración, modelos y unitarias — **151 tests pasando**.
+**Cobertura:** 30+ archivos de prueba entre integración, modelos y unitarias — **145 tests pasando**.
 
 ---
 

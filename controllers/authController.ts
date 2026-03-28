@@ -5,6 +5,7 @@ import User from '../models/userModel';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import sendEmail from '../utils/email';
+import { addToBlacklist } from '../utils/tokenBlacklist';
 const jwtStrategy = require('../strategies/jwtStrategy');
 const localStrategy = require('../strategies/localStrategy');
 
@@ -63,6 +64,16 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 });
 
 export const logout = (req: Request, res: Response): void => {
+    // Blacklist the Bearer token so it can't be reused even before it expires
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.decode(token) as JwtPayload | null;
+        if (decoded?.exp) {
+            addToBlacklist(token, decoded.exp * 1000);
+        }
+    }
+
     res.cookie('jwt', 'loggedout', {
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true,

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ─── Experience subdocument ───────────────────────────────────────────────────
 const experienceSchema = new mongoose.Schema({
@@ -83,7 +83,7 @@ const resumeSchema = new mongoose.Schema({
 }, {
     toJSON: {
         virtuals: true,
-        transform: (doc, ret) => {
+        transform: (doc: any, ret: any) => {
             delete ret._id;
             delete ret.id;
             delete ret.__v;
@@ -95,4 +95,4 @@ const resumeSchema = new mongoose.Schema({
 });
 
 const Resume = mongoose.model('Resume', resumeSchema);
-module.exports = Resume;
+export = Resume;

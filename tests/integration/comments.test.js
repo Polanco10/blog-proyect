@@ -1,7 +1,7 @@
 /**
  * Integration tests for the Comments system:
- * - Public: list approved, post new (pending)
- * - Admin: list pending, approve, delete
+ * - Public: list approved
+ * - Admin: post new (pending), list pending, approve, delete
  */
 const request = require('supertest');
 const mongoose = require('mongoose');
@@ -75,6 +75,7 @@ describe('POST /api/v1/articles/:articleId/comments', () => {
     it('should create a comment in pending state', async () => {
         const res = await request(app)
             .post(`/api/v1/articles/${articleId}/comments`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send({ author: 'Tester', email: 'tester@test.com', body: 'Excelente artículo!' });
         expect(res.statusCode).toBe(201);
         expect(res.body.data.comment.approved).toBe(false);
@@ -89,6 +90,7 @@ describe('POST /api/v1/articles/:articleId/comments', () => {
     it('should reject a comment without a body', async () => {
         const res = await request(app)
             .post(`/api/v1/articles/${articleId}/comments`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send({ author: 'Tester', email: 'tester@test.com' });
         expect(res.statusCode).toBe(400);
     });

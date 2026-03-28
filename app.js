@@ -126,17 +126,29 @@ if (process.env.NODE_ENV !== 'test') {
 // app.patch('/api/v1/articles/:id', updateArticle);
 // app.delete('/api/v1/articles/:id', deleteArticle);
 
+// Cache-Control for public read-only GET responses (1 hour).
+// Only applied to GET; mutations (POST/PATCH/DELETE) get no-store via the else branch.
+const publicCache = (req, res, next) => {
+    if (req.method === 'GET') {
+        res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=60');
+    } else {
+        res.set('Cache-Control', 'no-store');
+    }
+    next();
+};
+
 //routes
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/api/v1/articles', articleRouter); //middleware -> mounting multiple routers
+app.use('/api/v1/articles', publicCache, articleRouter); //middleware -> mounting multiple routers
 app.use('/api/v1/users', userRouter); //middleware -> mounting multiple routers
-app.use('/api/v1/experiences', experienceRouter);
-app.use('/api/v1/cheatsheets', cheatsheetRouter);
-app.use('/api/v1/quicktips', quicktipRouter);
+app.use('/api/v1/experiences', publicCache, experienceRouter);
+app.use('/api/v1/cheatsheets', publicCache, cheatsheetRouter);
+app.use('/api/v1/quicktips', publicCache, quicktipRouter);
 app.use('/api/v1/contact', contactRouter);
 app.use('/api/v1/upload', uploadRouter);
 app.use('/api/v1/resume', resumeRouter);
 app.use('/api/v1/articles/:articleId/comments', commentRouter);
+app.use('/api/v1/comments', commentRouter); // admin-only top-level access (no articleId needed)
 app.use('/api', feedRouter);
 app.all('*', (req, res, next) => { // Unhandled routes - rutas no definidas
     next(new AppError(` Can't find ${req.originalUrl} on this server`, 404)); //se salta el resto de los middleware 

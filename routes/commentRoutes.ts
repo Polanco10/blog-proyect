@@ -8,12 +8,11 @@ const { ROLES } = require('../constants');
 const router: Router = express.Router({ mergeParams: true });
 
 // Public
-router.route('/')
-    .get(commentController.getCommentsByArticle)
-    .post(validateComment, commentController.createComment);
+router.route('/').get(commentController.getCommentsByArticle);
 
 // Admin
 router.use(authController.protect, authController.restrictTo(ROLES.ADMIN));
+router.route('/').post(validateComment, commentController.createComment);
 router.route('/pending').get(commentController.getPendingComments);
 router.route('/:id/approve').patch(commentController.approveComment);
 router.route('/:id').delete(commentController.deleteComment);

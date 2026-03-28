@@ -24,13 +24,12 @@ const loginLimiter = rateLimit({
 //routes
 router.post('/signup', validateSignup, authController.signup);
 router.post('/login', loginLimiter, authController.login);
-router.get('/logout', authController.logout);
-router.post('/refresh-token', authController.refreshToken);
-
 router.post('/forgotPassword', forgotPasswordLimiter, authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
 router.use(authController.protect); //Aplica authControler.protect para todas las routes definidas bajo esta linea
+router.get('/logout', authController.restrictTo(ROLES.ADMIN), authController.logout);
+router.post('/refresh-token', authController.restrictTo(ROLES.ADMIN), authController.refreshToken);
 router.patch('/updateMyPassword', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
 router.patch('/updateMe', userController.updateMe);

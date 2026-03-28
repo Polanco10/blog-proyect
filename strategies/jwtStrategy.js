@@ -1,10 +1,12 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const AuthStrategy = require('./authStrategy');
+const { isBlacklisted } = require('../utils/tokenBlacklist');
 
 /**
  * JWTStrategy — authenticates requests via Bearer token in the Authorization header.
  * Verifies the JWT signature and expiry using JWT_SECRET.
+ * Rejects tokens that have been explicitly invalidated via logout.
  */
 class JWTStrategy extends AuthStrategy {
     async authenticate(req) {
@@ -14,6 +16,7 @@ class JWTStrategy extends AuthStrategy {
         const token = authHeader.split(' ')[1];
         try {
             const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+            if (isBlacklisted(token)) return null;
             return { id: decoded.id, iat: decoded.iat };
         } catch {
             return null;

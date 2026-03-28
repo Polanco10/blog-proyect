@@ -78,6 +78,8 @@ describe('PATCH /api/v1/articles/:id — partial update validation', () => {
             .send({ title: 'Guia Actualizada de Testing' });
         expect(res.statusCode).toBe(200);
         expect(res.body.data.article.title).toBe('Guia Actualizada de Testing');
+        // Slug changes when title changes — update for subsequent tests
+        articleId = slugFromTitle('Guia Actualizada de Testing');
     });
 
     it('should reject a title that is too short', async () => {
@@ -104,7 +106,7 @@ describe('PATCH /api/v1/articles/:id/view — view counter', () => {
         const before = await request(app).get(`/api/v1/articles/${articleId}`);
         const viewsBefore = before.body.data.article.views ?? 0;
 
-        await request(app).patch(`/api/v1/articles/${articleId}/view`).send();
+        await request(app).patch(`/api/v1/articles/${articleId}/view`).set('Authorization', `Bearer ${adminToken}`).send();
 
         const after = await request(app).get(`/api/v1/articles/${articleId}`);
         expect(after.body.data.article.views).toBe(viewsBefore + 1);
@@ -120,6 +122,7 @@ describe('PATCH /api/v1/articles/:id/like — like counter', () => {
 
         const res = await request(app)
             .patch(`/api/v1/articles/${articleId}/like`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send();
         expect(res.statusCode).toBe(200);
 

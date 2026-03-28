@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const cheatsheetSchema = new mongoose.Schema({
     title: {
@@ -34,7 +34,7 @@ const cheatsheetSchema = new mongoose.Schema({
 }, {
     toJSON: {
         virtuals: true,
-        transform: (doc, ret) => {
+        transform: (doc: any, ret: any) => {
             delete ret._id;
             delete ret.id;
             delete ret.slug;
@@ -54,4 +54,4 @@ cheatsheetSchema.pre('save', function (next) {
 cheatsheetSchema.index({ category: 1 });
 
 const Cheatsheet = mongoose.model('Cheatsheet', cheatsheetSchema);
-module.exports = Cheatsheet;
+export = Cheatsheet;

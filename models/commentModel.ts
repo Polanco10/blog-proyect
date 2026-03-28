@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema({
     article: {
@@ -42,7 +42,7 @@ commentSchema.index({ article: 1, approved: 1, createdAt: -1 });
 
 commentSchema.set('toJSON', {
     virtuals: true,
-    transform: (doc, ret) => {
+    transform: (doc: any, ret: any) => {
         ret.id = ret._id;
         delete ret._id;
         delete ret.__v;
@@ -52,4 +52,4 @@ commentSchema.set('toJSON', {
 });
 
 const Comment = mongoose.model('Comment', commentSchema);
-module.exports = Comment;
+export = Comment;

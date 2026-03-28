@@ -56,3 +56,14 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
 
     res.status(200).json({ status: 'success', data: { resume } });
 });
+
+// PATCH /api/v1/resume — replace the singleton resume document (admin only)
+exports.updateResume = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // findOneAndUpdate with upsert keeps the singleton pattern intact
+    const doc = await Resume.findOneAndUpdate(
+        { singleton: 'default' },
+        { ...req.body, updatedAt: new Date() },
+        { new: true, runValidators: true, upsert: true }
+    );
+    res.status(200).json({ status: 'success', data: { resume: doc } });
+});
