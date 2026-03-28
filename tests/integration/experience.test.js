@@ -17,11 +17,12 @@ const seedResume = async () => {
         { singleton: 'default' },
         {
             singleton: 'default',
-            name: 'Diego Polanco', email: 'test@test.com',
-            title:    { en: 'Developer',  es: 'Desarrollador' },
-            location: { en: 'Remote',     es: 'Remoto' },
-            summary:  { en: 'Summary',    es: 'Resumen' },
-            skills:   { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
+            name: 'Diego Polanco',
+            email: 'test@test.com',
+            title: { en: 'Developer', es: 'Desarrollador' },
+            location: { en: 'Remote', es: 'Remoto' },
+            summary: { en: 'Summary', es: 'Resumen' },
+            skills: { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
             experiences: [],
         },
         { upsert: true, new: true }
@@ -29,8 +30,8 @@ const seedResume = async () => {
 };
 
 const validExperience = {
-    company:  'Acme Corp',
-    role:     { en: 'Software Engineer', es: 'Ingeniero de Software' },
+    company: 'Acme Corp',
+    role: { en: 'Software Engineer', es: 'Ingeniero de Software' },
     startDate: '2022-01-01',
     description: { en: 'Developed web apps.', es: 'Desarrollé aplicaciones web.' },
 };
@@ -43,10 +44,16 @@ beforeAll(async () => {
     app = require('../../app');
 
     const User = require('../../models/userModel');
-    await User.create({ name: 'Admin', email: 'admin_exp@test.com',
-        password: 'password123', passwordConfirm: 'password123', role: 'admin' });
+    await User.create({
+        name: 'Admin',
+        email: 'admin_exp@test.com',
+        password: 'password123',
+        passwordConfirm: 'password123',
+        role: 'admin',
+    });
 
-    const res = await request(app).post('/api/v1/users/login')
+    const res = await request(app)
+        .post('/api/v1/users/login')
         .send({ email: 'admin_exp@test.com', password: 'password123' });
     adminToken = res.body.token;
 

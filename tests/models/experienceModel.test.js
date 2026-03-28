@@ -8,10 +8,10 @@ const baseProfile = {
     singleton: 'default',
     name: 'Diego Polanco',
     email: 'test@test.com',
-    title:    { en: 'Developer', es: 'Desarrollador' },
-    location: { en: 'Remote',   es: 'Remoto' },
-    summary:  { en: 'Summary',  es: 'Resumen' },
-    skills:   { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
+    title: { en: 'Developer', es: 'Desarrollador' },
+    location: { en: 'Remote', es: 'Remoto' },
+    summary: { en: 'Summary', es: 'Resumen' },
+    skills: { frontend: ['Angular'], backend: ['Node.js'], tools: ['Git'] },
 };
 
 beforeAll(async () => {
@@ -30,8 +30,8 @@ afterEach(async () => {
 
 describe('Experience (embedded in Resume)', () => {
     const validExp = {
-        company:  'Google',
-        role:     { en: 'Software Engineer', es: 'Ingeniero de Software' },
+        company: 'Google',
+        role: { en: 'Software Engineer', es: 'Ingeniero de Software' },
         startDate: new Date('2024-01-01'),
         description: { en: 'AI projects', es: 'Proyectos de IA' },
         achievements: {
@@ -50,26 +50,23 @@ describe('Experience (embedded in Resume)', () => {
 
     it('should fail without company name', async () => {
         const bad = { ...validExp, company: undefined };
-        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
-            .rejects.toThrow(/company name/);
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] })).rejects.toThrow(/company name/);
     });
 
     it('should fail without role', async () => {
         const bad = { ...validExp, role: undefined };
-        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
-            .rejects.toThrow(/required/);
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] })).rejects.toThrow(/required/);
     });
 
     it('should fail without startDate', async () => {
         const bad = { ...validExp, startDate: undefined };
-        await expect(Resume.create({ ...baseProfile, experiences: [bad] }))
-            .rejects.toThrow(/start date/);
+        await expect(Resume.create({ ...baseProfile, experiences: [bad] })).rejects.toThrow(/start date/);
     });
 
     it('should allow experience without description or achievements', async () => {
         const minimal = {
-            company:  'Twitter',
-            role:     { en: 'Staff Engineer', es: 'Ingeniero Principal' },
+            company: 'Twitter',
+            role: { en: 'Staff Engineer', es: 'Ingeniero Principal' },
             startDate: new Date('2023-01-01'),
         };
         const doc = await Resume.create({ ...baseProfile, experiences: [minimal] });

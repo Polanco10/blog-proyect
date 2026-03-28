@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
-const hpp = require('hpp')
+const hpp = require('hpp');
 const compression = require('compression');
 const cors = require('cors');
 const { randomUUID } = require('crypto');
@@ -54,16 +54,17 @@ app.use(cors(corsOptions)); //agrega algunos headers al response
 
 app.options('*', cors(corsOptions)); //Habilitar cors para todos los http methods
 
-app.use(helmet()); // Se agregan headers de seguridad http 
+app.use(helmet()); // Se agregan headers de seguridad http
 
 //morgan -> logger middleware
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
-const limiter = rateLimit({ // Requests validas por IP - max: 100 -> 100 request / windowMs -> 3600.000ms = 1hr
+const limiter = rateLimit({
+    // Requests validas por IP - max: 100 -> 100 request / windowMs -> 3600.000ms = 1hr
     max: 100,
     windowMs: 60 * 60 * 1000,
-    message: ' Too many request from this IP, please try again in an hour'
+    message: ' Too many request from this IP, please try again in an hour',
 });
 if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development') {
     app.use('/api', limiter); //middleware - afecta a todas las rutas que empiecen con /api
@@ -83,11 +84,13 @@ app.use(mongoSanitize());
 app.use(xss());
 
 //Prevenir parameter pollution - Evita que se repitan parametros en los filtros (ej: sort=description&sort=title) /  whitelist -> excepcion de parametros
-app.use(hpp({
-    whitelist: ['title', 'author']
-}));
+app.use(
+    hpp({
+        whitelist: ['title', 'author'],
+    })
+);
 
-app.use(compression()) //comprimir texto enviado a los clients
+app.use(compression()); //comprimir texto enviado a los clients
 
 // Correlation ID middleware — propaga X-Request-ID en request y response
 app.use((req, res, next) => {
@@ -150,9 +153,10 @@ app.use('/api/v1/resume', resumeRouter);
 app.use('/api/v1/articles/:articleId/comments', commentRouter);
 app.use('/api/v1/comments', commentRouter); // admin-only top-level access (no articleId needed)
 app.use('/api', feedRouter);
-app.all('*', (req, res, next) => { // Unhandled routes - rutas no definidas
-    next(new AppError(` Can't find ${req.originalUrl} on this server`, 404)); //se salta el resto de los middleware 
-})
+app.all('*', (req, res, next) => {
+    // Unhandled routes - rutas no definidas
+    next(new AppError(` Can't find ${req.originalUrl} on this server`, 404)); //se salta el resto de los middleware
+});
 
 app.use(globalErrorHandler); // Error middleware
 

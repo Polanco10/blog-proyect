@@ -8,12 +8,6 @@ const router: Router = express.Router();
 router.route('/:lang').get(resumeController.getResume);
 
 // Admin-only: update the singleton resume document
-router
-    .route('/')
-    .patch(
-        authController.protect,
-        authController.restrictTo(ROLES.ADMIN),
-        resumeController.updateResume,
-    );
+router.route('/').patch(authController.protect, authController.restrictTo(ROLES.ADMIN), resumeController.updateResume);
 
 export = router;

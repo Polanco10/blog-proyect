@@ -9,12 +9,22 @@ const router: Router = express.Router();
 router
     .route('/')
     .get(experienceController.getAllExperiences)
-    .post(authController.protect, authController.restrictTo(ROLES.ADMIN), validateExperience, experienceController.createExperience);
+    .post(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        validateExperience,
+        experienceController.createExperience
+    );
 
 router
     .route('/:id')
     .get(experienceController.getExperience)
-    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateExperiencePatch, experienceController.updateExperience)
+    .patch(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        validateExperiencePatch,
+        experienceController.updateExperience
+    )
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), experienceController.deleteExperience);
 
 export = router;

@@ -1,4 +1,4 @@
-const path = require('path');
+const _path = require('path');
 
 jest.mock('../../utils/logger', () => ({ error: jest.fn(), info: jest.fn() }));
 jest.mock('sharp', () => {

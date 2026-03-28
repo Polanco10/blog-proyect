@@ -46,14 +46,11 @@ beforeAll(async () => {
     adminToken = loginRes.body.token;
 
     // Create an article to attach comments to
-    const articleRes = await request(app)
-        .post('/api/v1/articles')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-            title: 'Articulo para comentarios test',
-            description: 'Descripción del artículo de prueba para comentarios.',
-            category: 'Programacion',
-        });
+    await request(app).post('/api/v1/articles').set('Authorization', `Bearer ${adminToken}`).send({
+        title: 'Articulo para comentarios test',
+        description: 'Descripción del artículo de prueba para comentarios.',
+        category: 'Programacion',
+    });
     // _id is hidden from response; derive slug from title for routing
     articleId = slugFromTitle('Articulo para comentarios test');
 });

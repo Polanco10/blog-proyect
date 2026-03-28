@@ -13,14 +13,18 @@ const escapeXml = (str = '') =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
-router.get('/feed.xml', catchAsync(async (req: Request, res: Response) => {
-    const siteUrl = process.env.SITE_URL || 'https://polanco.dev';
-    const articles = await Article.find({ published: true })
-        .sort('-createdAt')
-        .limit(20)
-        .select('title description createdAt category tags imageCover _id');
+router.get(
+    '/feed.xml',
+    catchAsync(async (req: Request, res: Response) => {
+        const siteUrl = process.env.SITE_URL || 'https://polanco.dev';
+        const articles = await Article.find({ published: true })
+            .sort('-createdAt')
+            .limit(20)
+            .select('title description createdAt category tags imageCover _id');
 
-    const items = articles.map((a: any) => `
+        const items = articles
+            .map(
+                (a: any) => `
     <item>
       <title>${escapeXml(a.title)}</title>
       <link>${siteUrl}/articles/${a._id}</link>
@@ -29,9 +33,11 @@ router.get('/feed.xml', catchAsync(async (req: Request, res: Response) => {
       <pubDate>${new Date(a.createdAt).toUTCString()}</pubDate>
       <category>${escapeXml(a.category)}</category>
       ${a.imageCover ? `<enclosure url="${escapeXml(a.imageCover)}" type="image/jpeg"/>` : ''}
-    </item>`).join('');
+    </item>`
+            )
+            .join('');
 
-    const rss = `<?xml version="1.0" encoding="UTF-8"?>
+        const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Polanco.dev — Technical Blog</title>
@@ -44,8 +50,9 @@ router.get('/feed.xml', catchAsync(async (req: Request, res: Response) => {
   </channel>
 </rss>`;
 
-    res.set('Content-Type', 'application/rss+xml; charset=utf-8');
-    res.send(rss);
-}));
+        res.set('Content-Type', 'application/rss+xml; charset=utf-8');
+        res.send(rss);
+    })
+);
 
 export = router;

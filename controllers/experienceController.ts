@@ -18,10 +18,19 @@ exports.getAllExperiences = catchAsync(async (_req: Request, res: Response, _nex
         results: experiences.length,
         data: {
             profile: resume
-                ? { name: resume.name, email: resume.email, website: resume.website,
-                    linkedin: resume.linkedin, github: resume.github,
-                    title: resume.title, location: resume.location, summary: resume.summary,
-                    skills: resume.skills, education: resume.education, languages: resume.languages }
+                ? {
+                      name: resume.name,
+                      email: resume.email,
+                      website: resume.website,
+                      linkedin: resume.linkedin,
+                      github: resume.github,
+                      title: resume.title,
+                      location: resume.location,
+                      summary: resume.summary,
+                      skills: resume.skills,
+                      education: resume.education,
+                      languages: resume.languages,
+                  }
                 : null,
             experiences,
         },

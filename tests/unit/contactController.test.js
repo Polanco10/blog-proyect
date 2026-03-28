@@ -45,9 +45,7 @@ describe('contactController.sendContactMessage', () => {
 
         expect(sendEmail).toHaveBeenCalledTimes(1);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith(
-            expect.objectContaining({ status: 'success' })
-        );
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
         expect(next).not.toHaveBeenCalled();
     });
 

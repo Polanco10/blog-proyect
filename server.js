@@ -7,7 +7,8 @@ dotenv.config({ path: './config.env' });
 
 const logger = require('./utils/logger');
 
-process.on('uncaughtException', err => { //se define un listener para manejar excepciones - ej:uso de variable sin declarar
+process.on('uncaughtException', err => {
+    //se define un listener para manejar excepciones - ej:uso de variable sin declarar
     logger.error('UNCAUGHT EXCEPTION!', { name: err.name, message: err.message, stack: err.stack });
     process.exit(1); //se cierra la aplicacion
 });
@@ -16,11 +17,9 @@ const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSW
 
 const connectionString = process.env.NODE_ENV === 'production' ? DB : process.env.DATABASE_LOCAL;
 
-mongoose
-    .connect(connectionString)
-    .then(() => {
-        logger.info('DB connection successful!', { env: process.env.NODE_ENV });
-    })
+mongoose.connect(connectionString).then(() => {
+    logger.info('DB connection successful!', { env: process.env.NODE_ENV });
+});
 
 const app = require('./app');
 
@@ -30,17 +29,19 @@ const server = app.listen(port, () => {
     logger.info(`App running on port ${port}`, { env: process.env.NODE_ENV });
 });
 
-process.on('unhandledRejection', err => { //se define un listener para manejar las promesas que envien un rejection - ej:conexion con la bd
+process.on('unhandledRejection', err => {
+    //se define un listener para manejar las promesas que envien un rejection - ej:conexion con la bd
     logger.error('UNHANDLED REJECTION!', { name: err.name, message: err.message });
-    server.close(() => { //se cierran primero las request que esten pendientes
+    server.close(() => {
+        //se cierran primero las request que esten pendientes
         process.exit(1); //se cierra la aplicacion
     });
 });
 
-process.on('SIGTERM', () => { //Cerrar el proceso cuando Heroku reinicie las app.
+process.on('SIGTERM', () => {
+    //Cerrar el proceso cuando Heroku reinicie las app.
     logger.info('SIGTERM RECEIVED. Shutting down gracefully');
     server.close(() => {
         logger.info('Process terminated!');
     });
 });
-

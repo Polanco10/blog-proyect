@@ -55,10 +55,7 @@ beforeAll(async () => {
     adminToken = res.body.token;
 
     // Create a published article for use in tests
-    const created = await request(app)
-        .post('/api/v1/articles')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send(ARTICLE_BASE);
+    await request(app).post('/api/v1/articles').set('Authorization', `Bearer ${adminToken}`).send(ARTICLE_BASE);
     // _id is hidden from response; derive slug from title for routing
     articleId = slugFromTitle(ARTICLE_BASE.title);
 });
@@ -106,7 +103,10 @@ describe('PATCH /api/v1/articles/:id/view — view counter', () => {
         const before = await request(app).get(`/api/v1/articles/${articleId}`);
         const viewsBefore = before.body.data.article.views ?? 0;
 
-        await request(app).patch(`/api/v1/articles/${articleId}/view`).set('Authorization', `Bearer ${adminToken}`).send();
+        await request(app)
+            .patch(`/api/v1/articles/${articleId}/view`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send();
 
         const after = await request(app).get(`/api/v1/articles/${articleId}`);
         expect(after.body.data.article.views).toBe(viewsBefore + 1);
@@ -150,9 +150,7 @@ describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
     });
 
     it('should return drafts for an authenticated admin', async () => {
-        const res = await request(app)
-            .get('/api/v1/articles/drafts')
-            .set('Authorization', `Bearer ${adminToken}`);
+        const res = await request(app).get('/api/v1/articles/drafts').set('Authorization', `Bearer ${adminToken}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe('success');
     });
@@ -163,16 +161,14 @@ describe('GET /api/v1/articles/drafts — drafts endpoint', () => {
             .set('Authorization', `Bearer ${adminToken}`)
             .send({ ...ARTICLE_BASE, title: 'Draft Article Test Title', published: false });
 
-        const res = await request(app)
-            .get('/api/v1/articles/drafts')
-            .set('Authorization', `Bearer ${adminToken}`);
-        const titles = res.body.data.articles.map((a) => a.title);
+        const res = await request(app).get('/api/v1/articles/drafts').set('Authorization', `Bearer ${adminToken}`);
+        const titles = res.body.data.articles.map(a => a.title);
         expect(titles).toContain('Draft Article Test Title');
     });
 
     it('drafts should not appear in the public listing', async () => {
         const res = await request(app).get('/api/v1/articles');
-        const titles = res.body.data.articles.map((a) => a.title);
+        const titles = res.body.data.articles.map(a => a.title);
         expect(titles).not.toContain('Draft Article Test Title');
     });
 });
@@ -196,9 +192,7 @@ describe('GET /api/v1/articles/search — text search', () => {
 
 describe('GET /api/v1/articles/admin/stats', () => {
     it('should return stats with an admin token', async () => {
-        const res = await request(app)
-            .get('/api/v1/articles/admin/stats')
-            .set('Authorization', `Bearer ${adminToken}`);
+        const res = await request(app).get('/api/v1/articles/admin/stats').set('Authorization', `Bearer ${adminToken}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.data).toBeDefined();
     });

@@ -24,9 +24,12 @@ export const isBlacklisted = (token: string): boolean => {
 };
 
 // Purge expired entries every hour to keep memory footprint minimal
-setInterval(() => {
-    const now = Date.now();
-    for (const [token, exp] of blacklist.entries()) {
-        if (now > exp) blacklist.delete(token);
-    }
-}, 60 * 60 * 1000).unref(); // unref() so this timer doesn't keep the process alive in tests
+setInterval(
+    () => {
+        const now = Date.now();
+        for (const [token, exp] of blacklist.entries()) {
+            if (now > exp) blacklist.delete(token);
+        }
+    },
+    60 * 60 * 1000
+).unref(); // unref() so this timer doesn't keep the process alive in tests

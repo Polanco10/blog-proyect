@@ -46,10 +46,7 @@ class ArticleRepository extends BaseRepository<Document> {
      * @returns {Promise<Document[]>}
      */
     async searchByText(text: string, limit = 20) {
-        return new ArticleQueryBuilder()
-            .searchByText(text)
-            .paginate(1, limit)
-            .build();
+        return new ArticleQueryBuilder().searchByText(text).paginate(1, limit).build();
     }
 
     /**
@@ -80,11 +77,7 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     async incrementViews(slug: string) {
-        return this.Model.findOneAndUpdate(
-            { slug },
-            { $inc: { views: 1 } },
-            { new: true, select: 'views' }
-        );
+        return this.Model.findOneAndUpdate({ slug }, { $inc: { views: 1 } }, { new: true, select: 'views' });
     }
 
     /**
@@ -93,11 +86,7 @@ class ArticleRepository extends BaseRepository<Document> {
      * @returns {Promise<Document|null>}
      */
     async incrementLikes(slug: string) {
-        return this.Model.findOneAndUpdate(
-            { slug },
-            { $inc: { likes: 1 } },
-            { new: true, select: 'likes' }
-        );
+        return this.Model.findOneAndUpdate({ slug }, { $inc: { likes: 1 } }, { new: true, select: 'likes' });
     }
 
     /**

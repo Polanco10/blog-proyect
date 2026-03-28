@@ -48,7 +48,7 @@ commentSchema.set('toJSON', {
         delete ret.__v;
         delete ret.email; // no exponer email públicamente
         return ret;
-    }
+    },
 });
 
 const Comment = mongoose.model('Comment', commentSchema);

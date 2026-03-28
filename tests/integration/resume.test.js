@@ -16,20 +16,26 @@ const seedResume = async (extraExperiences = []) => {
     await Resume.deleteMany({});
     return Resume.create({
         singleton: 'default',
-        name: 'Diego Polanco', email: 'diego@test.com',
-        website: 'polanco.dev', linkedin: 'linkedin.com/in/diego', github: 'github.com/diego',
-        title:    { en: 'Full Stack Developer', es: 'Desarrollador Full Stack' },
+        name: 'Diego Polanco',
+        email: 'diego@test.com',
+        website: 'polanco.dev',
+        linkedin: 'linkedin.com/in/diego',
+        github: 'github.com/diego',
+        title: { en: 'Full Stack Developer', es: 'Desarrollador Full Stack' },
         location: { en: 'Latin America (Remote)', es: 'Latinoamérica (Remoto)' },
-        summary:  { en: 'Full Stack Developer.', es: 'Desarrollador Full Stack.' },
-        skills:   { frontend: ['Angular', 'TypeScript'], backend: ['Node.js'], tools: ['Git'] },
-        education: [{
-            institution: 'Universidad Placeholder',
-            degree: { en: "Bachelor's in CS", es: 'Licenciatura en Computación' },
-            startDate: '2018', endDate: '2022',
-        }],
+        summary: { en: 'Full Stack Developer.', es: 'Desarrollador Full Stack.' },
+        skills: { frontend: ['Angular', 'TypeScript'], backend: ['Node.js'], tools: ['Git'] },
+        education: [
+            {
+                institution: 'Universidad Placeholder',
+                degree: { en: "Bachelor's in CS", es: 'Licenciatura en Computación' },
+                startDate: '2018',
+                endDate: '2022',
+            },
+        ],
         languages: [
             { language: { en: 'Spanish', es: 'Español' }, level: { en: 'Native', es: 'Nativo' } },
-            { language: { en: 'English', es: 'Inglés'  }, level: { en: 'Professional', es: 'Profesional' } },
+            { language: { en: 'English', es: 'Inglés' }, level: { en: 'Professional', es: 'Profesional' } },
         ],
         experiences: extraExperiences,
     });
@@ -78,12 +84,14 @@ describe('Resume Controller', () => {
         });
 
         it('should include embedded experiences', async () => {
-            await seedResume([{
-                company: 'Test Corp',
-                role: { en: 'Developer', es: 'Desarrollador' },
-                startDate: new Date('2023-01-01'),
-                description: { en: 'Built things', es: 'Construí cosas' },
-            }]);
+            await seedResume([
+                {
+                    company: 'Test Corp',
+                    role: { en: 'Developer', es: 'Desarrollador' },
+                    startDate: new Date('2023-01-01'),
+                    description: { en: 'Built things', es: 'Construí cosas' },
+                },
+            ]);
             const res = await request(app).get('/api/v1/resume/en');
             expect(res.status).toBe(200);
             expect(res.body.data.resume.experiences).toHaveLength(1);

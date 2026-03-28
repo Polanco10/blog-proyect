@@ -25,7 +25,7 @@ router.post(
     (req: Request, res: Response) => {
         res.status(200).json({
             status: 'success',
-            data: { url: req.body.imageCover }
+            data: { url: req.body.imageCover },
         });
     }
 );
@@ -41,7 +41,7 @@ router.post(
     (req: Request, res: Response) => {
         res.status(200).json({
             status: 'success',
-            data: { url: req.body.photo }
+            data: { url: req.body.photo },
         });
     }
 );

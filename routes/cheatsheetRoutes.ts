@@ -9,12 +9,22 @@ const router: Router = express.Router();
 router
     .route('/')
     .get(cheatsheetController.getAllCheatsheets)
-    .post(authController.protect, authController.restrictTo(ROLES.ADMIN), validateCheatsheet, cheatsheetController.createCheatsheet);
+    .post(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        validateCheatsheet,
+        cheatsheetController.createCheatsheet
+    );
 
 router
     .route('/:id')
     .get(cheatsheetController.getCheatsheet)
-    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), validateCheatsheetPatch, cheatsheetController.updateCheatsheet)
+    .patch(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        validateCheatsheetPatch,
+        cheatsheetController.updateCheatsheet
+    )
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), cheatsheetController.deleteCheatsheet);
 
 export = router;

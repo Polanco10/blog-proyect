@@ -1,57 +1,60 @@
 import mongoose from 'mongoose';
 
-const quickTipSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: [true, 'A quick tip must have a title'],
-        unique: true,
-        trim: true
+const quickTipSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: [true, 'A quick tip must have a title'],
+            unique: true,
+            trim: true,
+        },
+        language: {
+            type: String,
+            required: [true, 'A quick tip must specify a language'],
+            trim: true,
+        },
+        codeSnippet: {
+            type: String,
+            required: [true, 'A quick tip must have a code snippet'],
+        },
+        description: {
+            type: String,
+            trim: true,
+        },
+        seniority: {
+            type: String,
+            enum: ['Junior', 'Semi-Senior', 'Senior'],
+            default: 'Junior',
+        },
+        views: {
+            type: Number,
+            default: 0,
+        },
+        slug: {
+            type: String,
+            unique: true,
+            index: true,
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now,
+            select: false,
+        },
     },
-    language: {
-        type: String,
-        required: [true, 'A quick tip must specify a language'],
-        trim: true
-    },
-    codeSnippet: {
-        type: String,
-        required: [true, 'A quick tip must have a code snippet']
-    },
-    description: {
-        type: String,
-        trim: true
-    },
-    seniority: {
-        type: String,
-        enum: ['Junior', 'Semi-Senior', 'Senior'],
-        default: 'Junior'
-    },
-    views: {
-        type: Number,
-        default: 0
-    },
-    slug: {
-        type: String,
-        unique: true,
-        index: true,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        select: false
+    {
+        toJSON: {
+            virtuals: true,
+            transform: (doc: any, ret: any) => {
+                delete ret._id;
+                delete ret.id;
+                delete ret.slug;
+                delete ret.__v;
+                return ret;
+            },
+        },
+        toObject: { virtuals: true },
     }
-}, {
-    toJSON: {
-        virtuals: true,
-        transform: (doc: any, ret: any) => {
-            delete ret._id;
-            delete ret.id;
-            delete ret.slug;
-            delete ret.__v;
-            return ret;
-        }
-    },
-    toObject: { virtuals: true }
-});
+);
 
 quickTipSchema.pre('save', function (next) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');

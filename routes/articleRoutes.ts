@@ -12,7 +12,7 @@ const router = Router();
 const viewLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 1,
-    keyGenerator: (req) => `view:${req.ip}:${req.params.title}`,
+    keyGenerator: req => `view:${req.ip}:${req.params.title}`,
     // Return 200 silently — the frontend doesn't need an error, just no double-count
     handler: (_req, res) => res.status(200).json({ status: 'success', data: { views: null } }),
     skip: () => process.env.NODE_ENV === 'test',
@@ -22,7 +22,7 @@ const viewLimiter = rateLimit({
 const likeLimiter = rateLimit({
     windowMs: 24 * 60 * 60 * 1000,
     max: 1,
-    keyGenerator: (req) => `like:${req.ip}:${req.params.title}`,
+    keyGenerator: req => `like:${req.ip}:${req.params.title}`,
     handler: (_req, res) => res.status(200).json({ status: 'success', data: { likes: null } }),
     skip: () => process.env.NODE_ENV === 'test',
 });
@@ -30,8 +30,12 @@ const likeLimiter = rateLimit({
 // Aliased / special routes (before /:id to avoid conflicts)
 router.route('/top-5').get(articleController.aliasTopArticles, articleController.getAllArticles);
 router.route('/search').get(articleController.searchArticles);
-router.route('/drafts').get(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.getDrafts);
-router.route('/admin/stats').get(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.getAdminStats);
+router
+    .route('/drafts')
+    .get(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.getDrafts);
+router
+    .route('/admin/stats')
+    .get(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.getAdminStats);
 
 router
     .route('/')
@@ -43,7 +47,7 @@ router
         resizeArticleImage,
         validateArticle,
         articleController.setAuthor,
-        articleController.createArticle,
+        articleController.createArticle
     );
 
 router
@@ -55,13 +59,22 @@ router
         upload.single('imageCover'),
         resizeArticleImage,
         validateArticlePatch,
-        articleController.updateArticle,
+        articleController.updateArticle
     )
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.deleteArticle);
 
 // Article sub-actions — rate limited to prevent metric gaming
-router.route('/:title/view').patch(authController.protect, authController.restrictTo(ROLES.ADMIN), viewLimiter, articleController.incrementViews);
-router.route('/:title/like').patch(authController.protect, authController.restrictTo(ROLES.ADMIN), likeLimiter, articleController.likeArticle);
+router
+    .route('/:title/view')
+    .patch(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        viewLimiter,
+        articleController.incrementViews
+    );
+router
+    .route('/:title/like')
+    .patch(authController.protect, authController.restrictTo(ROLES.ADMIN), likeLimiter, articleController.likeArticle);
 router.route('/:title/related').get(articleController.getRelatedArticles);
 
 module.exports = router;

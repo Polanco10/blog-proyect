@@ -17,9 +17,13 @@ interface JwtPayload {
 }
 
 const signToken = (id: string, role: string): string => {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-    } as jwt.SignOptions);
+    return jwt.sign(
+        { id, role },
+        process.env.JWT_SECRET as string,
+        {
+            expiresIn: process.env.JWT_EXPIRES_IN,
+        } as jwt.SignOptions
+    );
 };
 
 const createSendToken = (user: any, statusCode: number, req: Request, res: Response): void => {
@@ -40,7 +44,7 @@ const createSendToken = (user: any, statusCode: number, req: Request, res: Respo
     });
 };
 
-export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const signup = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const newUser = await User.create({
         name: req.body.name,
         email: req.body.email,
@@ -126,7 +130,7 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response, nex
             message,
         });
         res.status(200).json({ status: 'success', message: 'Token sent to email' });
-    } catch (err) {
+    } catch (_err) {
         (user as any).passwordResetToken = undefined;
         (user as any).passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });
@@ -135,7 +139,10 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response, nex
 });
 
 export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const hashedToken = crypto.createHash('sha256').update(req.params.token as string).digest('hex');
+    const hashedToken = crypto
+        .createHash('sha256')
+        .update(req.params.token as string)
+        .digest('hex');
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetExpires: { $gt: Date.now() },

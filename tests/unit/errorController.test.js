@@ -21,16 +21,16 @@ describe('errorController', () => {
     const next = jest.fn();
 
     describe('development / test mode', () => {
-        beforeAll(() => { process.env.NODE_ENV = 'test'; });
+        beforeAll(() => {
+            process.env.NODE_ENV = 'test';
+        });
 
         it('returns full error details for operational errors', () => {
             const err = new AppError('Not found', 404);
             const res = makeRes();
             errorController(err, {}, res, next);
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({ status: 'fail', message: 'Not found' })
-            );
+            expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'fail', message: 'Not found' }));
         });
 
         it('returns 500 for non-operational errors', () => {
@@ -51,17 +51,19 @@ describe('errorController', () => {
     });
 
     describe('production mode', () => {
-        beforeAll(() => { process.env.NODE_ENV = 'production'; });
-        afterAll(() => { process.env.NODE_ENV = 'test'; });
+        beforeAll(() => {
+            process.env.NODE_ENV = 'production';
+        });
+        afterAll(() => {
+            process.env.NODE_ENV = 'test';
+        });
 
         it('returns safe message for operational errors', () => {
             const err = new AppError('Validation failed', 400);
             const res = makeRes();
             errorController(err, { requestId: 'test-id' }, res, next);
             expect(res.status).toHaveBeenCalledWith(400);
-            expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({ message: 'Validation failed' })
-            );
+            expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Validation failed' }));
         });
 
         it('returns generic message for non-operational errors', () => {
@@ -71,9 +73,7 @@ describe('errorController', () => {
             const res = makeRes();
             errorController(err, { requestId: 'test-id' }, res, next);
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({ message: 'Something is wrong!' })
-            );
+            expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Something is wrong!' }));
         });
 
         it('handles CastError (invalid MongoDB ObjectId)', () => {

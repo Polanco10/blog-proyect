@@ -67,9 +67,9 @@ describe('sendEmail utility', () => {
     it('should propagate errors thrown by sendMail', async () => {
         sendMailMock.mockRejectedValueOnce(new Error('SMTP connection refused'));
 
-        await expect(
-            sendEmail({ email: 'a@b.com', subject: 'S', message: 'M' })
-        ).rejects.toThrow('SMTP connection refused');
+        await expect(sendEmail({ email: 'a@b.com', subject: 'S', message: 'M' })).rejects.toThrow(
+            'SMTP connection refused'
+        );
     });
 
     it('should call sendMail exactly once per invocation', async () => {

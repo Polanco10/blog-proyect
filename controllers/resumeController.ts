@@ -24,32 +24,32 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
     );
 
     const resume = {
-        name:     doc.name,
-        email:    doc.email,
-        website:  doc.website,
+        name: doc.name,
+        email: doc.email,
+        website: doc.website,
         linkedin: doc.linkedin,
-        github:   doc.github,
-        title:    pick(doc.title, lang),
+        github: doc.github,
+        title: pick(doc.title, lang),
         location: pick(doc.location, lang),
-        summary:  pick(doc.summary, lang),
-        skills:   doc.skills,          // sin traducción
+        summary: pick(doc.summary, lang),
+        skills: doc.skills, // sin traducción
         education: (doc.education ?? []).map((edu: any) => ({
             institution: edu.institution,
-            degree:      pick(edu.degree, lang),
-            startDate:   edu.startDate,
-            endDate:     edu.endDate,
+            degree: pick(edu.degree, lang),
+            startDate: edu.startDate,
+            endDate: edu.endDate,
         })),
         languages: (doc.languages ?? []).map((l: any) => ({
             language: pick(l.language, lang),
-            level:    pick(l.level, lang),
+            level: pick(l.level, lang),
         })),
         experiences: sorted.map((exp: any) => ({
-            company:      exp.company,
-            role:         pick(exp.role, lang),
-            startDate:    exp.startDate,
-            endDate:      exp.endDate,
-            current:      exp.current,
-            description:  pick(exp.description, lang),
+            company: exp.company,
+            role: pick(exp.role, lang),
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            current: exp.current,
+            description: pick(exp.description, lang),
             achievements: pick(exp.achievements, lang) ?? [],
         })),
     };
@@ -58,7 +58,7 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
 });
 
 // PATCH /api/v1/resume — replace the singleton resume document (admin only)
-exports.updateResume = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+exports.updateResume = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     // findOneAndUpdate with upsert keeps the singleton pattern intact
     const doc = await Resume.findOneAndUpdate(
         { singleton: 'default' },

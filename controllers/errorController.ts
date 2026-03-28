@@ -10,18 +10,21 @@ interface MongooseError extends Error {
     code?: number;
 }
 
-const handleCastErrorDB = (err: MongooseError): AppError => { //manejar errores provinientes de la base de datos - ej: id no existe
+const handleCastErrorDB = (err: MongooseError): AppError => {
+    //manejar errores provinientes de la base de datos - ej: id no existe
     const message = `Invalid ${err.path}: ${err.value}`;
     return new AppError(message, 400);
 };
 
-const handleDuplicateFieldsDB = (err: MongooseError): AppError => { // duplicate key - ese valor ya existe en la base de datos
+const handleDuplicateFieldsDB = (err: MongooseError): AppError => {
+    // duplicate key - ese valor ya existe en la base de datos
     const value = err.errmsg?.match(/(["'])(\\?.)*?\1/)?.[0] ?? 'unknown';
     const message = `Duplicate field value: ${value}. Please use another value.`;
     return new AppError(message, 400);
 };
 
-const handleValidationErrorDB = (err: MongooseError): AppError => { // error provocado por la validacion del modelo
+const handleValidationErrorDB = (err: MongooseError): AppError => {
+    // error provocado por la validacion del modelo
     const errors = Object.values(err.errors ?? {}).map(el => el.message); //arreglo de todos los mensajes de error de validacion
     const message = `Invalid input data. ${errors.join('. ')}`;
     return new AppError(message, 400);
@@ -43,9 +46,15 @@ const sendErrorProd = (err: AppError, req: Request, res: Response): void => {
             message: err.message,
         });
     } else {
-        logger.error('Unexpected error', { requestId: (req as any).requestId, name: err.name, message: err.message, stack: err.stack }); //Log error
+        logger.error('Unexpected error', {
+            requestId: (req as any).requestId,
+            name: err.name,
+            message: err.message,
+            stack: err.stack,
+        }); //Log error
 
-        res.status(500).json({  //Enviar un mensaje generico
+        res.status(500).json({
+            //Enviar un mensaje generico
             status: 'error',
             message: 'Something is wrong!',
         });
@@ -55,7 +64,8 @@ const sendErrorProd = (err: AppError, req: Request, res: Response): void => {
 const handleJWTError = (): AppError => new AppError('Invalid token. Please log in again!', 401);
 const handleJWTExpiredError = (): AppError => new AppError('Your token has expired! Please log in again.', 401);
 
-module.exports = (err: MongooseError & AppError, req: Request, res: Response, _next: NextFunction): void => { //Error handling middleware - maneja errores operacionales y errores inesperados
+module.exports = (err: MongooseError & AppError, req: Request, res: Response, _next: NextFunction): void => {
+    //Error handling middleware - maneja errores operacionales y errores inesperados
     (err as any).statusCode = (err as any).statusCode || 500;
     (err as any).status = (err as any).status || 'error';
 

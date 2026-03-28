@@ -86,17 +86,17 @@ CLOUDINARY_API_SECRET=...
 
 ## Scripts Disponibles
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Servidor de desarrollo con nodemon + tsx (auto-reload) |
-| `npm start` | Inicio estándar desde build compilado (`dist/server.js`) |
-| `npm run prod` | Modo producción con tsx (`NODE_ENV=production`) |
-| `npm run build` | Verificación de tipos TypeScript (`tsc --noEmit`) |
-| `npm run debug` | Depuración con ndb |
-| `npm test` | Ejecutar pruebas Jest (MongoDB Memory Server) |
-| `npm run test:verbose` | Salida detallada de pruebas |
-| `npm run seed:resume` | Poblar el documento singleton de Resume (perfil + experiencias EN/ES) |
-| `npm run seed:resume:reset` | Eliminar y re-sembrar el documento de Resume desde cero |
+| Comando                     | Descripción                                                           |
+| --------------------------- | --------------------------------------------------------------------- |
+| `npm run dev`               | Servidor de desarrollo con nodemon + tsx (auto-reload)                |
+| `npm start`                 | Inicio estándar desde build compilado (`dist/server.js`)              |
+| `npm run prod`              | Modo producción con tsx (`NODE_ENV=production`)                       |
+| `npm run build`             | Verificación de tipos TypeScript (`tsc --noEmit`)                     |
+| `npm run debug`             | Depuración con ndb                                                    |
+| `npm test`                  | Ejecutar pruebas Jest (MongoDB Memory Server)                         |
+| `npm run test:verbose`      | Salida detallada de pruebas                                           |
+| `npm run seed:resume`       | Poblar el documento singleton de Resume (perfil + experiencias EN/ES) |
+| `npm run seed:resume:reset` | Eliminar y re-sembrar el documento de Resume desde cero               |
 
 ---
 
@@ -194,38 +194,39 @@ Todas las rutas tienen el prefijo `/api/v1/`.
 
 ### Públicos (solo lectura + contacto)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/articles` | Listar artículos (soporta filtro, ordenamiento, paginación) |
-| `GET` | `/articles/:id` | Obtener artículo individual |
-| `GET` | `/articles/:id/related` | Artículos relacionados (misma categoría) |
-| `GET` | `/articles/:id/comments` | Obtener comentarios aprobados |
-| `GET` | `/quicktips` | Listar trucos rápidos |
-| `GET` | `/cheatsheets` | Listar cheatsheets |
-| `GET` | `/experiences` | Perfil bilingüe + lista de experiencias |
-| `GET` | `/resume/:lang` | Obtener datos del CV en `en` o `es` (perfil + experiencias) |
-| `POST` | `/users/signup` | Registro de usuario |
-| `POST` | `/users/login` | Inicio de sesión (devuelve JWT) |
-| `POST` | `/contact` | Enviar mensaje de contacto |
+| Método | Ruta                     | Descripción                                                 |
+| ------ | ------------------------ | ----------------------------------------------------------- |
+| `GET`  | `/articles`              | Listar artículos (soporta filtro, ordenamiento, paginación) |
+| `GET`  | `/articles/:id`          | Obtener artículo individual                                 |
+| `GET`  | `/articles/:id/related`  | Artículos relacionados (misma categoría)                    |
+| `GET`  | `/articles/:id/comments` | Obtener comentarios aprobados                               |
+| `GET`  | `/quicktips`             | Listar trucos rápidos                                       |
+| `GET`  | `/cheatsheets`           | Listar cheatsheets                                          |
+| `GET`  | `/experiences`           | Perfil bilingüe + lista de experiencias                     |
+| `GET`  | `/resume/:lang`          | Obtener datos del CV en `en` o `es` (perfil + experiencias) |
+| `POST` | `/users/signup`          | Registro de usuario                                         |
+| `POST` | `/users/login`           | Inicio de sesión (devuelve JWT)                             |
+| `POST` | `/contact`               | Enviar mensaje de contacto                                  |
 
 ### Protegidos (JWT + Admin)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/users/logout` | Cerrar sesión (blacklist del token) |
-| `POST` | `/users/refresh-token` | Refrescar token JWT |
-| `POST` | `/articles` | Crear artículo |
-| `PATCH` | `/articles/:id` | Actualizar artículo |
-| `DELETE` | `/articles/:id` | Eliminar artículo |
-| `PATCH` | `/articles/:id/view` | Incrementar vistas (rate limited) |
-| `PATCH` | `/articles/:id/like` | Dar like (rate limited) |
-| `POST` | `/articles/:id/comments` | Crear comentario (pendiente de aprobación) |
-| `PATCH` | `/articles/:id/comments/:commentId/approve` | Aprobar comentario |
-| `GET` | `/articles/:id/comments/pending` | Listar comentarios pendientes |
-| `POST` | `/upload/article-image` | Subir + redimensionar portada de artículo |
-| `POST` | `/upload/user-photo` | Subir + redimensionar avatar de usuario |
+| Método   | Ruta                                        | Descripción                                |
+| -------- | ------------------------------------------- | ------------------------------------------ |
+| `GET`    | `/users/logout`                             | Cerrar sesión (blacklist del token)        |
+| `POST`   | `/users/refresh-token`                      | Refrescar token JWT                        |
+| `POST`   | `/articles`                                 | Crear artículo                             |
+| `PATCH`  | `/articles/:id`                             | Actualizar artículo                        |
+| `DELETE` | `/articles/:id`                             | Eliminar artículo                          |
+| `PATCH`  | `/articles/:id/view`                        | Incrementar vistas (rate limited)          |
+| `PATCH`  | `/articles/:id/like`                        | Dar like (rate limited)                    |
+| `POST`   | `/articles/:id/comments`                    | Crear comentario (pendiente de aprobación) |
+| `PATCH`  | `/articles/:id/comments/:commentId/approve` | Aprobar comentario                         |
+| `GET`    | `/articles/:id/comments/pending`            | Listar comentarios pendientes              |
+| `POST`   | `/upload/article-image`                     | Subir + redimensionar portada de artículo  |
+| `POST`   | `/upload/user-photo`                        | Subir + redimensionar avatar de usuario    |
 
 **Ejemplos de consultas:**
+
 ```
 GET /api/v1/articles?category=Programacion&sort=-createdAt&fields=title,description&page=1&limit=10
 GET /api/v1/articles?views[gte]=100&tags=Angular,TypeScript
@@ -255,31 +256,31 @@ npm run test:verbose
 
 ## Patrones de Diseño
 
-| Patrón | Implementación | Propósito |
-|---|---|---|
-| **MVC** | models/ → controllers/ → routes/ | Separación de responsabilidades |
-| **Factory** | `handlerFactory.js` | CRUD reutilizable para cualquier modelo |
-| **Repository** | `repositories/` | Desacopla el acceso a datos de los controladores |
-| **Builder** | `builders/` | Construcción composable de consultas |
-| **Strategy** | `strategies/` | Métodos de autenticación intercambiables |
+| Patrón         | Implementación                   | Propósito                                        |
+| -------------- | -------------------------------- | ------------------------------------------------ |
+| **MVC**        | models/ → controllers/ → routes/ | Separación de responsabilidades                  |
+| **Factory**    | `handlerFactory.js`              | CRUD reutilizable para cualquier modelo          |
+| **Repository** | `repositories/`                  | Desacopla el acceso a datos de los controladores |
+| **Builder**    | `builders/`                      | Construcción composable de consultas             |
+| **Strategy**   | `strategies/`                    | Métodos de autenticación intercambiables         |
 
 ---
 
 ## Tecnologías Utilizadas
 
-| Tecnología | Propósito |
-|---|---|
-| Node.js + Express | Servidor HTTP y enrutamiento |
-| MongoDB + Mongoose | Base de datos y ODM |
-| JWT (jsonwebtoken) | Autenticación basada en tokens |
-| Multer + Sharp | Subida y procesamiento de imágenes |
-| Winston | Logging estructurado |
-| Nodemailer | Envío de emails |
-| Helmet | Cabeceras de seguridad |
-| express-rate-limit | Limitación de peticiones |
-| xss-clean + mongo-sanitize | Sanitización de entrada |
-| Swagger UI | Documentación de la API |
-| Jest + mongodb-memory-server | Pruebas |
+| Tecnología                   | Propósito                          |
+| ---------------------------- | ---------------------------------- |
+| Node.js + Express            | Servidor HTTP y enrutamiento       |
+| MongoDB + Mongoose           | Base de datos y ODM                |
+| JWT (jsonwebtoken)           | Autenticación basada en tokens     |
+| Multer + Sharp               | Subida y procesamiento de imágenes |
+| Winston                      | Logging estructurado               |
+| Nodemailer                   | Envío de emails                    |
+| Helmet                       | Cabeceras de seguridad             |
+| express-rate-limit           | Limitación de peticiones           |
+| xss-clean + mongo-sanitize   | Sanitización de entrada            |
+| Swagger UI                   | Documentación de la API            |
+| Jest + mongodb-memory-server | Pruebas                            |
 
 ---
 

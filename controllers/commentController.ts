@@ -10,7 +10,10 @@ const logger = require('../utils/logger');
 async function resolveArticleId(param: string, next: NextFunction): Promise<string | null> {
     if (mongoose.isValidObjectId(param)) return param;
     const article = await articleRepository.findByIdentifier(param);
-    if (!article) { next(new AppError('No article found', 404)); return null; }
+    if (!article) {
+        next(new AppError('No article found', 404));
+        return null;
+    }
     return article._id;
 }
 
@@ -22,7 +25,9 @@ exports.getCommentsByArticle = catchAsync(async (req: Request, res: Response, ne
     const comments = await Comment.find({
         article: articleId,
         approved: true,
-    }).sort('-createdAt').select('-email -__v');
+    })
+        .sort('-createdAt')
+        .select('-email -__v');
 
     res.status(200).json({
         status: 'success',
@@ -65,11 +70,7 @@ exports.getPendingComments = catchAsync(async (req: Request, res: Response) => {
 
 // Aprobar un comentario — admin
 exports.approveComment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const comment = await Comment.findByIdAndUpdate(
-        req.params.id,
-        { approved: true },
-        { new: true }
-    );
+    const comment = await Comment.findByIdAndUpdate(req.params.id, { approved: true }, { new: true });
     if (!comment) return next(new AppError('No comment found with that ID', 404));
     res.status(200).json({ status: 'success', data: { comment } });
 });

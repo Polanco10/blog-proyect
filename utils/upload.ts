@@ -27,7 +27,7 @@ const multerFilter = (req, file, cb) => {
 exports.upload = multer({
     storage: multerStorage,
     fileFilter: multerFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
 });
 
 /**
@@ -35,13 +35,15 @@ exports.upload = multer({
  */
 const uploadToS3 = async (buffer, key, contentType) => {
     const bucket = process.env.AWS_S3_BUCKET_IMAGES;
-    await s3Client.send(new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        Body: buffer,
-        ContentType: contentType,
-        CacheControl: 'public, max-age=31536000, immutable',
-    }));
+    await s3Client.send(
+        new PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: buffer,
+            ContentType: contentType,
+            CacheControl: 'public, max-age=31536000, immutable',
+        })
+    );
 
     const cdnUrl = process.env.CLOUDFRONT_IMAGES_URL;
     return cdnUrl ? `${cdnUrl}/${key}` : `https://${bucket}.s3.amazonaws.com/${key}`;
@@ -86,10 +88,7 @@ exports.resizeUserPhoto = async (req, res, next) => {
 
     try {
         const filename = `user-${req.user.id}-${Date.now()}.webp`;
-        const buffer = await sharp(req.file.buffer)
-            .resize(200, 200, { fit: 'cover' })
-            .webp({ quality: 90 })
-            .toBuffer();
+        const buffer = await sharp(req.file.buffer).resize(200, 200, { fit: 'cover' }).webp({ quality: 90 }).toBuffer();
 
         if (process.env.NODE_ENV === 'production' && s3Client) {
             const key = `users/${filename}`;
