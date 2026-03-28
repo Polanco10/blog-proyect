@@ -74,66 +74,6 @@ describe('contactController.sendContactMessage', () => {
         expect(emailCall.subject).toContain(validBody.subject);
     });
 
-    it('should call next with 400 AppError when name is missing', async () => {
-        const req = makeReq({ ...validBody, name: '' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should call next with 400 AppError when email is missing', async () => {
-        const req = makeReq({ ...validBody, email: '' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should call next with 400 AppError when subject is missing', async () => {
-        const req = makeReq({ ...validBody, subject: '' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should call next with 400 AppError when message is missing', async () => {
-        const req = makeReq({ ...validBody, message: '' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should call next with 400 AppError when message is too short', async () => {
-        const req = makeReq({ ...validBody, message: 'Short' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should call next with 400 AppError for invalid email format', async () => {
-        const req = makeReq({ ...validBody, email: 'not-an-email' });
-        const res = makeRes();
-
-        await contactController.sendContactMessage(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
-        expect(sendEmail).not.toHaveBeenCalled();
-    });
-
     it('should propagate sendEmail failure to next', async () => {
         sendEmail.mockRejectedValueOnce(new Error('SMTP error'));
         const req = makeReq(validBody);

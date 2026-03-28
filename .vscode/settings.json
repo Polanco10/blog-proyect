@@ -1,0 +1,20 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "typescript.tsc.autoDetect": "off",
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.workspaceSymbols.scope": "allOpenProjects",
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/dist": true
+  },
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/node_modules", "**/node_modules/**"]
+  }
+}

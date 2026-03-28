@@ -27,7 +27,9 @@ const uploadRouter = require('./routes/uploadRoutes');
 
 const app = express();
 
-//app.enable('trust proxy'); // Necesario detrás del proxy de Railway/Nginx
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Necesario detrás del proxy de Railway/Nginx
+}
 //global middlewares
 //middlewares -> en la mitad entre el req y el res
 
@@ -63,7 +65,7 @@ const limiter = rateLimit({ // Requests validas por IP - max: 100 -> 100 request
     windowMs: 60 * 60 * 1000,
     message: ' Too many request from this IP, please try again in an hour'
 });
-if (process.env.NODE_ENV !== 'test' || process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development') {
     app.use('/api', limiter); //middleware - afecta a todas las rutas que empiecen con /api
 }
 

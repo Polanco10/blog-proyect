@@ -12,6 +12,7 @@ interface JwtPayload {
     id: string;
     role: string;
     iat: number;
+    exp?: number;
 }
 
 const signToken = (id: string, role: string): string => {
@@ -26,6 +27,7 @@ const createSendToken = (user: any, statusCode: number, req: Request, res: Respo
         expires: new Date(Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+        sameSite: 'strict' as const,
     };
 
     res.cookie('jwt', token, cookieOptions);
@@ -64,6 +66,7 @@ export const logout = (req: Request, res: Response): void => {
     res.cookie('jwt', 'loggedout', {
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true,
+        sameSite: 'strict' as const,
     });
     res.status(200).json({ status: 'success' });
 };
@@ -150,9 +153,18 @@ export const refreshToken = catchAsync(async (req: Request, res: Response, next:
 
     let decoded: JwtPayload;
     try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET as string, { ignoreExpiration: true }) as JwtPayload;
+        decoded = jwt.verify(token, process.env.JWT_SECRET as string, {
+            ignoreExpiration: true,
+            algorithms: ['HS256'],
+        }) as JwtPayload;
     } catch {
         return next(new AppError('Invalid token', 401));
+    }
+
+    // Reject if token expired more than 7 days ago — prevents infinite refresh with stolen tokens
+    const sevenDaysSeconds = 7 * 24 * 60 * 60;
+    if (decoded.exp && Math.floor(Date.now() / 1000) - decoded.exp > sevenDaysSeconds) {
+        return next(new AppError('Session expired — please log in again', 401));
     }
 
     const user = await User.findById(decoded.id);

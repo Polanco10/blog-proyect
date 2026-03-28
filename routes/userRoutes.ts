@@ -14,9 +14,16 @@ const forgotPasswordLimiter = rateLimit({
     message: 'Too many password reset requests. Try again in 1 hour.',
 });
 
+// Rate limiter para login — previene fuerza bruta
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 10,
+    message: 'Too many login attempts. Try again in 15 minutes.',
+});
+
 //routes
 router.post('/signup', validateSignup, authController.signup);
-router.post('/login', authController.login);
+router.post('/login', loginLimiter, authController.login);
 router.get('/logout', authController.logout);
 router.post('/refresh-token', authController.refreshToken);
 

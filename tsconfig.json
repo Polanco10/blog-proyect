@@ -12,8 +12,13 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node"],
+    "noEmit": false
   },
-  "include": ["**/*.ts", "**/*.js"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*", "app.js", "server.js", "**/*.ts", "!node_modules/**/*"],
+  "exclude": ["node_modules", "node_modules/**", "dist/**", "tests/**", "**/node_modules", "**/node_modules/**"],
+  "ts-node": {
+    "esm": false
+  }
 }

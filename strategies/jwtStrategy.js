@@ -13,7 +13,7 @@ class JWTStrategy extends AuthStrategy {
 
         const token = authHeader.split(' ')[1];
         try {
-            const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+            const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
             return { id: decoded.id, iat: decoded.iat };
         } catch {
             return null;
