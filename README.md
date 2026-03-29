@@ -12,7 +12,7 @@ La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de
 - **Patrón Strategy** — Estrategias de autenticación intercambiables (`JWTStrategy`, `LocalStrategy`) que extienden una clase base `AuthStrategy`
 - **Patrón Factory** — `handlerFactory.js` genera controladores CRUD reutilizables para cualquier modelo Mongoose
 - **Patrón Repository** — Capa de acceso a datos (`BaseRepository` → `ArticleRepository`, etc.) que desacopla los controladores de Mongoose
-- **Patrón Builder** — `ArticleQueryBuilder` / `QuicktipQueryBuilder` para construcción composable de consultas
+- **Arquitectura Modular de Controladores** — `authController.ts` actúa como barrel que re-exporta desde módulos enfocados: `authMiddleware.ts` (protect, restrictTo), `tokenService.ts` (JWT, logout, refresh), `passwordController.ts` (forgot, reset, update)
 - **Endpoint de CV/Resume** — `GET /api/v1/resume/:lang` resuelve el documento singleton de Resume al idioma solicitado (`en` / `es`) y devuelve perfil + experiencias con todos los campos ya traducidos
 - **Subida de Imágenes** — `multer` (almacenamiento en memoria) + `sharp` para redimensionado a WebP (1200x630 artículos, 200x200 avatares)
 - **Sistema de Comentarios** — Creación y moderación exclusiva para admin (crear, aprobar, eliminar) con rutas anidadas por artículo
@@ -114,7 +114,10 @@ blog-proyect/
 ├── controllers/                # TypeScript
 │   ├── handlerFactory.ts       # Fábrica CRUD genérica (getAll, getOne, create, update, delete)
 │   ├── articleController.ts    # Lógica específica de artículos (vistas, likes, relacionados, borradores)
-│   ├── authController.ts       # Login, signup, protect, restrictTo, refresh-token, blacklist
+│   ├── authController.ts       # Barrel: re-exporta desde authMiddleware, tokenService, passwordController
+│   ├── authMiddleware.ts       # protect + restrictTo (middleware de autenticación/autorización)
+│   ├── tokenService.ts         # signToken, createSendToken, logout, refreshToken
+│   ├── passwordController.ts   # forgotPassword, resetPassword, updatePassword
 │   ├── commentController.ts    # Crear, aprobar, listar pendientes/aprobados
 │   ├── experienceController.ts # CRUD de experiencias embebidas (subdocumentos Mongoose)
 │   ├── resumeController.ts     # Resuelve el documento Resume al idioma solicitado (EN/ES)
@@ -141,10 +144,6 @@ blog-proyect/
 │   ├── articleRepository.ts
 │   ├── cheatsheetRepository.ts
 │   └── quicktipRepository.ts
-├── builders/                   # Constructores de consultas (patrón Builder)
-│   ├── baseQueryBuilder.js
-│   ├── articleQueryBuilder.js
-│   └── quicktipQueryBuilder.js
 ├── utils/
 │   ├── apiFeatures.ts          # Filtrado, ordenamiento y paginación de consultas
 │   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
@@ -261,7 +260,6 @@ npm run test:verbose
 | **MVC**        | models/ → controllers/ → routes/ | Separación de responsabilidades                  |
 | **Factory**    | `handlerFactory.js`              | CRUD reutilizable para cualquier modelo          |
 | **Repository** | `repositories/`                  | Desacopla el acceso a datos de los controladores |
-| **Builder**    | `builders/`                      | Construcción composable de consultas             |
 | **Strategy**   | `strategies/`                    | Métodos de autenticación intercambiables         |
 
 ---

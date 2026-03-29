@@ -69,8 +69,6 @@ const articleSchema = new mongoose.Schema(
             transform: (doc: any, ret: any) => {
                 delete ret._id;
                 delete ret.id;
-                delete ret.published;
-                delete ret.slug;
                 delete ret.__v;
                 return ret;
             },
@@ -99,14 +97,12 @@ articleSchema.pre('save', function (next) {
 });
 
 articleSchema.pre(/^find/, function (this: any, next) {
-    // query middleware - se ejecuta antes de cualquier query find
-    // Solo mostrar artículos publicados en queries públicas (no cuando se especifica published explícitamente)
-    if (this.getFilter().published === undefined && !this._skipPublishedFilter) {
+    // Solo mostrar artículos publicados cuando no se filtra por published explícitamente
+    if (this.getFilter().published === undefined) {
         this.where({ published: true });
     }
     this.populate({
-        // .populate() hace el "join" cuando se tiene un objectId como referencia dentro de otro documento
-        path: 'author', //property del request
+        path: 'author',
         select: '-__v -role -_id',
     });
     next();

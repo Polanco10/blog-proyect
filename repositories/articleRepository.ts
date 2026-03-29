@@ -1,7 +1,6 @@
 import { Document } from 'mongoose';
 import BaseRepository from './baseRepository';
 const Article = require('../models/articleModel');
-const ArticleQueryBuilder = require('../builders/articleQueryBuilder');
 
 class ArticleRepository extends BaseRepository<Document> {
     constructor() {
@@ -9,31 +8,17 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Returns a fresh ArticleQueryBuilder for fluent query construction.
-     * @returns {ArticleQueryBuilder}
-     */
-    query() {
-        return new ArticleQueryBuilder();
-    }
-
-    /**
-     * Find top articles by views (pre-configured alias query).
-     * @param {number} limit
-     * @returns {Promise<Document[]>}
+     * Find top articles by views.
      */
     async findTopByViews(limit = 5) {
-        return new ArticleQueryBuilder()
-            .sortByPopularity()
-            .select('title', 'author', 'category', 'views')
-            .paginate(1, limit)
-            .build();
+        return this.Model.find({ published: true })
+            .sort('-views -createdAt')
+            .select('title author category views')
+            .limit(limit);
     }
 
     /**
      * Find articles by category.
-     * @param {string} category
-     * @param {object} queryString
-     * @returns {Promise<Document[]>}
      */
     async findByCategory(category: string, queryString = {}) {
         return this.findAll({ ...queryString, category });
@@ -41,12 +26,12 @@ class ArticleRepository extends BaseRepository<Document> {
 
     /**
      * Full-text search articles.
-     * @param {string} text
-     * @param {number} limit
-     * @returns {Promise<Document[]>}
      */
     async searchByText(text: string, limit = 20) {
-        return new ArticleQueryBuilder().searchByText(text).paginate(1, limit).build();
+        return this.Model.find({ $text: { $search: text }, published: true })
+            .sort('-createdAt')
+            .select('-__v')
+            .limit(limit);
     }
 
     /**
@@ -108,10 +93,7 @@ class ArticleRepository extends BaseRepository<Document> {
      * @returns {Promise<Document[]>}
      */
     async findDrafts() {
-        // Use _skipPublishedFilter to bypass the pre-find hook that adds published:true
-        const query = this.Model.find({ published: false });
-        (query as any)._skipPublishedFilter = true;
-        return query.sort('-createdAt');
+        return this.Model.find({ published: false }).sort('-createdAt');
     }
 
     /**
