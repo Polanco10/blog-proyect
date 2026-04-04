@@ -77,7 +77,7 @@ export const refreshToken = catchAsync(async (req: Request, res: Response, next:
         return next(new AppError('Invalid token', 401));
     }
 
-    // Reject if token expired more than 7 days ago
+    // Rechazar si el token expiró hace más de 7 días
     const sevenDaysSeconds = 7 * 24 * 60 * 60;
     if (decoded.exp && Math.floor(Date.now() / 1000) - decoded.exp > sevenDaysSeconds) {
         return next(new AppError('Session expired — please log in again', 401));

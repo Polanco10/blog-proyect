@@ -4,9 +4,9 @@ const AuthStrategy = require('./authStrategy');
 const { isBlacklisted } = require('../utils/tokenBlacklist');
 
 /**
- * JWTStrategy — authenticates requests via Bearer token in the Authorization header.
- * Verifies the JWT signature and expiry using JWT_SECRET.
- * Rejects tokens that have been explicitly invalidated via logout.
+ * JWTStrategy — autentica requests via Bearer token en el header Authorization.
+ * Verifica la firma y expiración del JWT usando JWT_SECRET.
+ * Rechaza tokens que han sido invalidados explícitamente via logout.
  */
 class JWTStrategy extends AuthStrategy {
     async authenticate(req) {

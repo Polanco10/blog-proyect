@@ -1,12 +1,12 @@
 /**
- * AuthStrategy — defines the interface every authentication strategy must implement.
- * Concrete strategies (JWT, Local, API Key) implement authenticate(req).
+ * AuthStrategy — define la interfaz que toda estrategia de autenticación debe implementar.
+ * Las estrategias concretas (JWT, Local, API Key) implementan authenticate(req).
  */
 class AuthStrategy {
     /**
-     * Extract and verify credentials from the request.
+     * Extrae y verifica las credenciales del request.
      * @param {import('express').Request} req
-     * @returns {Promise<{ id: string } | null>} decoded payload, or null on failure
+     * @returns {Promise<{ id: string } | null>} payload decodificado, o null si falla
      */
     // eslint-disable-next-line no-unused-vars
     async authenticate(req) {

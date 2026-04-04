@@ -140,7 +140,7 @@ blog-proyect/
 │   ├── jwtStrategy.js          # Verificación de token JWT
 │   └── localStrategy.js        # Login con email + contraseña
 ├── repositories/               # Capa de acceso a datos (patrón Repository)
-│   ├── baseRepository.ts
+│   ├── baseRepository.ts       # CRUD genérico + findBySlug/updateBySlug/deleteBySlug
 │   ├── articleRepository.ts
 │   ├── cheatsheetRepository.ts
 │   └── quicktipRepository.ts
@@ -148,6 +148,8 @@ blog-proyect/
 │   ├── apiFeatures.ts          # Filtrado, ordenamiento y paginación de consultas
 │   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
 │   ├── catchAsync.ts           # Wrapper para errores asíncronos
+│   ├── slugPlugin.ts           # Plugin de Mongoose para generar slug desde título
+│   ├── schemaOptions.ts        # Opciones reutilizables de serialización JSON para schemas
 │   ├── tokenBlacklist.ts       # In-memory JWT blacklist con auto-purge
 │   ├── upload.js               # Procesamiento de imágenes con Multer + Sharp
 │   ├── email.js                # Transporte Nodemailer
@@ -258,9 +260,10 @@ npm run test:verbose
 | Patrón         | Implementación                   | Propósito                                        |
 | -------------- | -------------------------------- | ------------------------------------------------ |
 | **MVC**        | models/ → controllers/ → routes/ | Separación de responsabilidades                  |
-| **Factory**    | `handlerFactory.js`              | CRUD reutilizable para cualquier modelo          |
+| **Factory**    | `handlerFactory.ts`              | CRUD reutilizable para cualquier modelo          |
 | **Repository** | `repositories/`                  | Desacopla el acceso a datos de los controladores |
 | **Strategy**   | `strategies/`                    | Métodos de autenticación intercambiables         |
+| **Plugin**     | `utils/slugPlugin.ts`            | Generación de slug reutilizable entre modelos    |
 
 ---
 

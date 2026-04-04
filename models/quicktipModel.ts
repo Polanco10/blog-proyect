@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import slugPlugin from '../utils/slugPlugin';
+import createSchemaOptions from '../utils/schemaOptions';
 
 const quickTipSchema = new mongoose.Schema(
     {
@@ -41,25 +43,10 @@ const quickTipSchema = new mongoose.Schema(
             select: false,
         },
     },
-    {
-        toJSON: {
-            virtuals: true,
-            transform: (doc: any, ret: any) => {
-                delete ret._id;
-                delete ret.id;
-                delete ret.slug;
-                delete ret.__v;
-                return ret;
-            },
-        },
-        toObject: { virtuals: true },
-    }
+    createSchemaOptions('slug')
 );
 
-quickTipSchema.pre('save', function (next) {
-    this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    next();
-});
+quickTipSchema.plugin(slugPlugin);
 
 // Indexes para filtrado por lenguaje y nivel
 quickTipSchema.index({ language: 1 });

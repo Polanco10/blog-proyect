@@ -56,7 +56,7 @@ app.options('*', cors(corsOptions)); //Habilitar cors para todos los http method
 
 app.use(helmet()); // Se agregan headers de seguridad http
 
-// HTTP request logging — morgan in dev, structured logger in production
+// Logging de requests HTTP — morgan en dev, logger estructurado en producción
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
@@ -122,8 +122,8 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-// Cache-Control for public read-only GET responses (1 hour).
-// Only applied to GET; mutations (POST/PATCH/DELETE) get no-store via the else branch.
+// Cache-Control para respuestas GET públicas de solo lectura (1 hora).
+// Solo se aplica a GET; mutaciones (POST/PATCH/DELETE) reciben no-store via la rama else.
 const publicCache = (req, res, next) => {
     if (req.method === 'GET') {
         res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=60');

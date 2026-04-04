@@ -2,9 +2,9 @@ import { Model, Document, Query } from 'mongoose';
 import APIFeatures from '../utils/apiFeatures';
 
 /**
- * BaseRepository — generic data access layer wrapping Mongoose operations.
- * Resource-specific repositories extend this class and can override methods
- * to add model-specific query logic (e.g. population, projections).
+ * BaseRepository — capa de acceso a datos genérica sobre operaciones de Mongoose.
+ * Los repositorios específicos extienden esta clase y pueden sobrescribir métodos
+ * para agregar lógica de consulta propia del modelo (ej. population, proyecciones).
  */
 class BaseRepository<T extends Document = Document> {
     protected Model: Model<T>;
@@ -14,8 +14,8 @@ class BaseRepository<T extends Document = Document> {
     }
 
     /**
-     * Find all documents, applying APIFeatures (filter, sort, fields, paginate).
-     * @param queryString - req.query object
+     * Busca todos los documentos, aplicando APIFeatures (filtro, orden, campos, paginación).
+     * @param queryString - objeto req.query
      */
     async findAll(queryString: Record<string, unknown> = {}): Promise<T[]> {
         const feature = new APIFeatures(this.Model.find() as unknown as Query<T[], T>, queryString)
@@ -27,21 +27,21 @@ class BaseRepository<T extends Document = Document> {
     }
 
     /**
-     * Find a single document by ID.
+     * Busca un documento por ID.
      */
     async findById(id: string): Promise<T | null> {
         return this.Model.findById(id).select('-__v') as Promise<T | null>;
     }
 
     /**
-     * Create a new document.
+     * Crea un nuevo documento.
      */
     async create(data: Partial<T>): Promise<T> {
         return this.Model.create(data) as Promise<T>;
     }
 
     /**
-     * Update a document by ID and return the updated version.
+     * Actualiza un documento por ID y retorna la versión actualizada.
      */
     async updateById(id: string, data: Partial<T>): Promise<T | null> {
         return this.Model.findByIdAndUpdate(id, data as any, {
@@ -51,10 +51,34 @@ class BaseRepository<T extends Document = Document> {
     }
 
     /**
-     * Delete a document by ID.
+     * Elimina un documento por ID.
      */
     async deleteById(id: string): Promise<T | null> {
         return this.Model.findByIdAndDelete(id) as Promise<T | null>;
+    }
+
+    /**
+     * Busca un documento por slug.
+     */
+    async findBySlug(slug: string): Promise<T | null> {
+        return this.Model.findOne({ slug } as any) as Promise<T | null>;
+    }
+
+    /**
+     * Actualiza un documento por slug y retorna la versión actualizada.
+     */
+    async updateBySlug(slug: string, data: Partial<T>): Promise<T | null> {
+        return this.Model.findOneAndUpdate({ slug } as any, data as any, {
+            new: true,
+            runValidators: true,
+        }) as Promise<T | null>;
+    }
+
+    /**
+     * Elimina un documento por slug.
+     */
+    async deleteBySlug(slug: string): Promise<T | null> {
+        return this.Model.findOneAndDelete({ slug } as any) as Promise<T | null>;
     }
 }
 

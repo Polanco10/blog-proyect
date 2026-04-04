@@ -2,9 +2,9 @@ const AuthStrategy = require('./authStrategy');
 const User = require('../models/userModel');
 
 /**
- * LocalStrategy — authenticates requests via email + password in req.body.
- * Returns { id, iat: Date.now() } on success, null on failure.
- * Used internally by the login endpoint.
+ * LocalStrategy — autentica requests via email + contraseña en req.body.
+ * Retorna { id, iat: Date.now() } en caso de éxito, null si falla.
+ * Usado internamente por el endpoint de login.
  */
 class LocalStrategy extends AuthStrategy {
     async authenticate(req) {

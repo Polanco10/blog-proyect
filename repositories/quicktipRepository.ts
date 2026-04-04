@@ -7,20 +7,8 @@ class QuickTipRepository extends BaseRepository<Document> {
         super(QuickTip);
     }
 
-    async findBySlug(slug: string) {
-        return this.Model.findOne({ slug });
-    }
-
-    async updateBySlug(slug: string, data: object) {
-        return this.Model.findOneAndUpdate({ slug }, data, { new: true, runValidators: true });
-    }
-
-    async deleteBySlug(slug: string) {
-        return this.Model.findOneAndDelete({ slug });
-    }
-
     /**
-     * Find tips filtered by language and/or seniority level.
+     * Busca tips filtrados por lenguaje y/o nivel de seniority.
      * @param {object} filters - { language?, seniority? }
      * @param {object} queryString
      * @returns {Promise<Document[]>}

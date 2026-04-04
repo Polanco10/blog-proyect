@@ -8,7 +8,7 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Find top articles by views.
+     * Busca los artículos más vistos.
      */
     async findTopByViews(limit = 5) {
         return this.Model.find({ published: true })
@@ -18,14 +18,14 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Find articles by category.
+     * Busca artículos por categoría.
      */
     async findByCategory(category: string, queryString = {}) {
         return this.findAll({ ...queryString, category });
     }
 
     /**
-     * Full-text search articles.
+     * Búsqueda de texto completo en artículos.
      */
     async searchByText(text: string, limit = 20) {
         return this.Model.find({ $text: { $search: text }, published: true })
@@ -35,30 +35,16 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Find an article by its unique slug (title-based).
+     * Busca un artículo por su slug único (basado en título).
      * @param {string} slug
      * @returns {Promise<Document|null>}
      */
     async findByIdentifier(slug: string) {
         const bySlug = await this.Model.findOne({ slug });
         if (bySlug) return bySlug;
-        // Fallback for articles without a slug field (created before the pre-save hook)
+        // Fallback para artículos sin campo slug (creados antes del hook pre-save)
         const titlePattern = new RegExp('^' + slug.replace(/-/g, '[\\s\\-]+') + '$', 'i');
         return this.Model.findOne({ title: titlePattern });
-    }
-
-    /**
-     * Update an article by slug.
-     * @param {string} slug
-     * @param {object} data
-     * @returns {Promise<Document|null>}
-     */
-    async updateBySlug(slug: string, data: object) {
-        return this.Model.findOneAndUpdate({ slug }, data, { new: true, runValidators: true });
-    }
-
-    async deleteBySlug(slug: string) {
-        return this.Model.findOneAndDelete({ slug });
     }
 
     async incrementViews(slug: string) {
@@ -66,7 +52,7 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Atomically increment likes for an article by slug.
+     * Incrementa atómicamente los likes de un artículo por slug.
      * @param {string} slug
      * @returns {Promise<Document|null>}
      */
@@ -75,8 +61,8 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Find articles related to a given article (same category, excluding itself).
-     * @param {string|ObjectId} id - current article _id (always ObjectId after resolution)
+     * Busca artículos relacionados (misma categoría, excluyendo el actual).
+     * @param {string|ObjectId} id - _id del artículo actual (siempre ObjectId tras resolución)
      * @param {string} category
      * @param {number} limit
      * @returns {Promise<Document[]>}
@@ -89,7 +75,7 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Find all draft articles (published: false) — admin only.
+     * Busca todos los artículos en borrador (published: false) — solo admin.
      * @returns {Promise<Document[]>}
      */
     async findDrafts() {
@@ -97,7 +83,7 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Aggregate statistics for the admin dashboard.
+     * Agrega estadísticas para el panel de administración.
      * @returns {Promise<object>}
      */
     async getStats() {

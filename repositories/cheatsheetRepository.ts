@@ -7,20 +7,8 @@ class CheatsheetRepository extends BaseRepository<Document> {
         super(Cheatsheet);
     }
 
-    async findBySlug(slug: string) {
-        return this.Model.findOne({ slug });
-    }
-
-    async updateBySlug(slug: string, data: object) {
-        return this.Model.findOneAndUpdate({ slug }, data, { new: true, runValidators: true });
-    }
-
-    async deleteBySlug(slug: string) {
-        return this.Model.findOneAndDelete({ slug });
-    }
-
     /**
-     * Find cheatsheets by category.
+     * Busca cheatsheets por categoría.
      * @param {string} category
      * @param {object} queryString
      * @returns {Promise<Document[]>}

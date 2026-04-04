@@ -4,7 +4,7 @@ import catchAsync from '../utils/catchAsync';
 
 const router: Router = express.Router();
 
-// Escape XML special characters
+// Escapar caracteres especiales de XML
 const escapeXml = (str = '') =>
     str
         .replace(/&/g, '&amp;')

@@ -1,12 +1,12 @@
 /**
- * Auth Controller — barrel module.
+ * Auth Controller — módulo barrel.
  *
- * Split into focused modules for SRP:
+ * Dividido en módulos enfocados por SRP:
  *  - authMiddleware.ts  → protect, restrictTo
  *  - tokenService.ts    → signToken, createSendToken, logout, refreshToken
  *  - passwordController.ts → forgotPassword, resetPassword, updatePassword
  *
- * This file re-exports everything so existing route imports remain unchanged.
+ * Este archivo re-exporta todo para que los imports existentes en rutas no cambien.
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -16,16 +16,16 @@ import { createSendToken } from './tokenService';
 const localStrategy = require('../strategies/localStrategy');
 import AppError from '../utils/appError';
 
-// Re-export middleware
+// Re-exportar middleware
 export { protect, restrictTo } from './authMiddleware';
 
-// Re-export token operations
+// Re-exportar operaciones de token
 export { logout, refreshToken } from './tokenService';
 
-// Re-export password operations
+// Re-exportar operaciones de contraseña
 export { forgotPassword, resetPassword, updatePassword } from './passwordController';
 
-// --- Auth handlers (signup, login) live here ---
+// --- Handlers de autenticación (signup, login) viven aquí ---
 
 interface JwtPayload {
     id: string;

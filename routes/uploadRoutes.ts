@@ -14,7 +14,7 @@ const uploadLimiter = rateLimit({
 });
 
 // POST /api/v1/upload/article-image
-// Admin only — upload and resize an article cover image
+// Solo admin — subir y redimensionar imagen de portada de artículo
 router.post(
     '/article-image',
     uploadLimiter,
@@ -31,7 +31,7 @@ router.post(
 );
 
 // POST /api/v1/upload/user-photo
-// Authenticated users can upload their own avatar
+// Usuarios autenticados pueden subir su propio avatar
 router.post(
     '/user-photo',
     uploadLimiter,

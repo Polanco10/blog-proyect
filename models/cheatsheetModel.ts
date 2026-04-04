@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import slugPlugin from '../utils/slugPlugin';
+import createSchemaOptions from '../utils/schemaOptions';
 
 const cheatsheetSchema = new mongoose.Schema(
     {
@@ -33,25 +35,10 @@ const cheatsheetSchema = new mongoose.Schema(
             select: false,
         },
     },
-    {
-        toJSON: {
-            virtuals: true,
-            transform: (doc: any, ret: any) => {
-                delete ret._id;
-                delete ret.id;
-                delete ret.slug;
-                delete ret.__v;
-                return ret;
-            },
-        },
-        toObject: { virtuals: true },
-    }
+    createSchemaOptions('slug')
 );
 
-cheatsheetSchema.pre('save', function (next) {
-    this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    next();
-});
+cheatsheetSchema.plugin(slugPlugin);
 
 // Index para filtrado por categoría
 cheatsheetSchema.index({ category: 1 });

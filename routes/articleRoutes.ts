@@ -8,17 +8,17 @@ const { ROLES } = require('../constants');
 
 const router = Router();
 
-// 1 view increment per IP per article per 10 minutes
+// 1 incremento de vista por IP por artículo cada 10 minutos
 const viewLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 1,
     keyGenerator: req => `view:${req.ip}:${req.params.title}`,
-    // Return 200 silently — the frontend doesn't need an error, just no double-count
+    // Retornar 200 silenciosamente — el frontend no necesita un error, solo evitar doble conteo
     handler: (_req, res) => res.status(200).json({ status: 'success', data: { views: null } }),
     skip: () => process.env.NODE_ENV === 'test',
 });
 
-// 1 like per IP per article per 24 hours
+// 1 like por IP por artículo cada 24 horas
 const likeLimiter = rateLimit({
     windowMs: 24 * 60 * 60 * 1000,
     max: 1,
@@ -27,7 +27,7 @@ const likeLimiter = rateLimit({
     skip: () => process.env.NODE_ENV === 'test',
 });
 
-// Aliased / special routes (before /:id to avoid conflicts)
+// Rutas especiales/alias (antes de /:id para evitar conflictos)
 router.route('/top-5').get(articleController.aliasTopArticles, articleController.getAllArticles);
 router.route('/search').get(articleController.searchArticles);
 router
@@ -63,7 +63,7 @@ router
     )
     .delete(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.deleteArticle);
 
-// Article sub-actions — rate limited to prevent metric gaming
+// Sub-acciones de artículos — con rate limit para prevenir manipulación de métricas
 router
     .route('/:title/view')
     .patch(

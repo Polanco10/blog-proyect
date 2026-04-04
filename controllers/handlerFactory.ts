@@ -4,8 +4,8 @@ import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
 import APIFeatures from '../utils/apiFeatures';
 
-// Explicit singular-key map — more robust than slicing the last character.
-// Add new collections here when they are served via handlerFactory.
+// Mapa explícito de claves singulares — más robusto que recortar el último carácter.
+// Agregar nuevas colecciones aquí cuando se sirvan via handlerFactory.
 const SINGULAR_KEY: Record<string, string> = {
     articles: 'article',
     experiences: 'experience',
@@ -15,7 +15,7 @@ const SINGULAR_KEY: Record<string, string> = {
     cheatsheets: 'cheatsheet',
 };
 
-/** Derive the singular response key for a collection name. */
+/** Deriva la clave singular de respuesta para un nombre de colección. */
 function singularKey(collectionName: string): string {
     return SINGULAR_KEY[collectionName] ?? collectionName.replace(/s$/, '');
 }

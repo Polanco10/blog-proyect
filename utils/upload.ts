@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'production') {
     PutObjectCommand = POC;
 }
 
-// Use memory storage — process with sharp before saving
+// Usar almacenamiento en memoria — procesar con sharp antes de guardar
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -50,7 +50,7 @@ const uploadToS3 = async (buffer, key, contentType) => {
 };
 
 /**
- * Resize and save article cover image.
+ * Redimensiona y guarda la imagen de portada del artículo.
  * Producción: sube a S3. Desarrollo: escribe a public/uploads/.
  */
 exports.resizeArticleImage = async (req, res, next) => {
@@ -80,7 +80,7 @@ exports.resizeArticleImage = async (req, res, next) => {
 };
 
 /**
- * Resize and save user photo.
+ * Redimensiona y guarda la foto de usuario.
  * Producción: sube a S3. Desarrollo: escribe a public/uploads/.
  */
 exports.resizeUserPhoto = async (req, res, next) => {
