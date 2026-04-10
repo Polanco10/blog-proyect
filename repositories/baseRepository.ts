@@ -27,6 +27,27 @@ class BaseRepository<T extends Document = Document> {
     }
 
     /**
+     * Igual que findAll pero también devuelve el total de documentos sin paginación.
+     * Útil para construir controles de paginación en el cliente.
+     * @param queryString - objeto req.query
+     */
+    async findAllPaginated(queryString: Record<string, unknown> = {}): Promise<{ data: T[]; total: number }> {
+        // Conteo con los mismos filtros pero sin skip/limit
+        const countFeature = new APIFeatures(this.Model.find() as unknown as Query<T[], T>, queryString).filter();
+        const total = await (countFeature.query as unknown as { countDocuments(): Promise<number> }).countDocuments();
+
+        // Datos con paginación completa
+        const dataFeature = new APIFeatures(this.Model.find() as unknown as Query<T[], T>, queryString)
+            .filter()
+            .sort()
+            .limitFields()
+            .paginate();
+        const data = await (dataFeature.query as unknown as Promise<T[]>);
+
+        return { data, total };
+    }
+
+    /**
      * Busca un documento por ID.
      */
     async findById(id: string): Promise<T | null> {

@@ -13,7 +13,7 @@ const sendEmail = async options => {
 
     const mailOptions = {
         //Definicion de email
-        from: 'Diego Polanco <diego.polancob@gmail.com>',
+        from: process.env.EMAIL_FROM || 'noreply@polanco.dev',
         to: options.email,
         subject: options.subject,
         text: options.message,

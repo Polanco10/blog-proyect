@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import User from '../models/userModel';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
+import { AuthRequest } from '../types';
 const jwtStrategy = require('../strategies/jwtStrategy');
 
 interface JwtPayload {
@@ -11,7 +12,7 @@ interface JwtPayload {
     exp?: number;
 }
 
-export const protect = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const protect = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction) => {
     // Delega la extracción y verificación del token a JWTStrategy
     const payload: JwtPayload | null = await jwtStrategy.authenticate(req);
     if (!payload) {
@@ -22,16 +23,16 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
     if (!currentUser) {
         return next(new AppError('The user belonging to this token does not exist.', 401));
     }
-    if ((currentUser as any).changedPasswordAfter(payload.iat)) {
+    if (currentUser.changedPasswordAfter(payload.iat)) {
         return next(new AppError('User recently changed password! Please log in again.', 401));
     }
-    (req as any).user = currentUser;
+    req.user = currentUser;
     next();
 });
 
 export const restrictTo = (...roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-        if (!roles.includes((req as any).user.role)) {
+    return (req: AuthRequest, res: Response, next: NextFunction): void => {
+        if (!req.user || !roles.includes(req.user.role)) {
             return next(new AppError('You do not have permission to perform this action', 403)) as any;
         }
         next();

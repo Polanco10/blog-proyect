@@ -1,3 +1,4 @@
+import validator from 'validator';
 import AppError from './appError';
 
 interface ValidationRule {
@@ -53,8 +54,7 @@ const validate = (schema: ValidationSchema) => (req: any, res: any, next: any) =
         }
 
         if (rules.isEmail) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) errors.push(`${field} must be a valid email address`);
+            if (!validator.isEmail(String(value))) errors.push(`${field} must be a valid email address`);
         }
     }
 

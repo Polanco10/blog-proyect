@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { CATEGORIES } from '../constants';
 import slugPlugin from '../utils/slugPlugin';
 import createSchemaOptions from '../utils/schemaOptions';
-// const validator = require('validator');
 
 const articleSchema = new mongoose.Schema(
     {
@@ -13,7 +12,6 @@ const articleSchema = new mongoose.Schema(
             trim: true, // borra los espacios al principio y al final de los strings
             maxlength: [40, 'An article title must have less or equal then 40 characters'], //validacion
             minlength: [10, 'An article title must have more or equal then 10 characters'], //validacion
-            // validate: [validator.isAlpha, 'Article must only contain characters'] //validacion de validator
         },
         description: {
             type: String,
@@ -67,20 +65,12 @@ const articleSchema = new mongoose.Schema(
     },
     createSchemaOptions()
 );
+
 // Indexes para optimizar búsquedas frecuentes
 articleSchema.index({ category: 1, createdAt: -1 });
 articleSchema.index({ views: -1 });
 articleSchema.index({ title: 'text', description: 'text' }); // full-text search
-// articleSchema.virtual('lolcalTime').get(function () { //virtual property - no persiste en la base de datos
-//     return 'localtime'
-// })
 
-// articleSchema.pre('save', function (next) {    // document middleware - ocurre antes de "(pre)" .save() y de .create() - No ocurre con find() o otros
-//     console.log(this)
-//     next();
-// });
-// articleSchema.statics.nombrefuncion = function(){} // static function - funcion que se puede usar dentro de los model middleware
-// articleSchema.pre('find', function (next) {    // query middleware - se ejecuta antes de query find() - No ocurre con findOne()
 // Genera el slug a partir del título antes de guardar
 articleSchema.plugin(slugPlugin);
 
@@ -95,12 +85,6 @@ articleSchema.pre(/^find/, function (this: any, next) {
     });
     next();
 });
-
-// articleSchema.pre('aggregate', function (next) { // agregation middleware - se ejecuta antes de cualquier aggregate
-// this.pipeline().unshift({$match:{}})
-// console.log(this.pipeline())
-// next();
-// })
 
 const Article = mongoose.model('Article', articleSchema);
 

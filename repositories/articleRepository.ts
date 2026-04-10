@@ -18,13 +18,6 @@ class ArticleRepository extends BaseRepository<Document> {
     }
 
     /**
-     * Busca artículos por categoría.
-     */
-    async findByCategory(category: string, queryString = {}) {
-        return this.findAll({ ...queryString, category });
-    }
-
-    /**
      * Búsqueda de texto completo en artículos.
      */
     async searchByText(text: string, limit = 20) {

@@ -5,13 +5,14 @@ import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import sendEmail from '../utils/email';
 import { createSendToken } from './tokenService';
+import { AuthRequest } from '../types';
 
 export const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
         return next(new AppError('There is no user with email address', 404));
     }
-    const resetToken = (user as any).createPasswordResetToken();
+    const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
@@ -24,8 +25,8 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response, nex
         });
         res.status(200).json({ status: 'success', message: 'Token sent to email' });
     } catch (_err) {
-        (user as any).passwordResetToken = undefined;
-        (user as any).passwordResetExpires = undefined;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });
         return next(new AppError('There was an error sending the email. Try again later!', 500));
     }
@@ -44,26 +45,26 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
     if (!user) {
         return next(new AppError('Token is invalid or has expired!', 400));
     }
-    (user as any).password = req.body.password;
-    (user as any).passwordConfirm = req.body.passwordConfirm;
-    (user as any).passwordResetToken = undefined;
-    (user as any).passwordResetExpires = undefined;
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
     await user.save();
 
     createSendToken(user, 200, req, res);
 });
 
-export const updatePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById((req as any).user.id).select('+password');
+export const updatePassword = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user!.id).select('+password');
     if (!user) {
         return next(new AppError('User not found', 404));
     }
 
-    if (!(await (user as any).correctPassword(req.body.passwordCurrent, (user as any).password))) {
+    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
         return next(new AppError('Your current password is wrong', 401));
     }
-    (user as any).password = req.body.password;
-    (user as any).passwordConfirm = req.body.passwordConfirm;
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
     await user.save();
 
     createSendToken(user, 200, req, res);

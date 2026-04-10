@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import { ROLES } from '../constants';
+import { IUser } from '../types';
 
 const userSchema = new mongoose.Schema(
     {
@@ -107,5 +108,5 @@ userSchema.methods.createPasswordResetToken = function () {
     return resetToken;
 };
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model<IUser>('User', userSchema);
 export = User;

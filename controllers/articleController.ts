@@ -1,13 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 const articleRepository = require('../repositories/articleRepository');
 const quicktipRepository = require('../repositories/quicktipRepository');
 const cheatsheetRepository = require('../repositories/cheatsheetRepository');
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
+import { AuthRequest } from '../types';
 
 // Middleware — asigna el usuario loggeado como author del artículo
-export const setAuthor = (req: Request, res: Response, next: NextFunction): void => {
-    req.body.author = (req as any).user.id;
+export const setAuthor = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    req.body.author = req.user!.id;
     next();
 };
 
@@ -19,11 +20,12 @@ export const aliasTopArticles = (req: Request, res: Response, next: NextFunction
     next();
 };
 
-export const getAllArticles = catchAsync(async (req: Request, res: Response) => {
-    const articles = await articleRepository.findAll(req.query);
+export const getAllArticles = catchAsync(async (req: AuthRequest, res: Response) => {
+    const { data: articles, total } = await articleRepository.findAllPaginated(req.query as Record<string, unknown>);
     res.status(200).json({
         status: 'success',
         results: articles.length,
+        total,
         data: { articles },
     });
 });
@@ -48,7 +50,11 @@ export const createArticle = catchAsync(async (req: Request, res: Response) => {
 export const updateArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // If the title is changing, regenerate the slug and check for conflicts
     if (req.body.title) {
-        const newSlug = req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const newSlug = req.body.title
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
         // A conflict exists when another article already holds the new slug
         const existing = await articleRepository.Model.findOne({ slug: newSlug }).lean();
         if (existing && (existing as any).slug !== req.params.title) {
