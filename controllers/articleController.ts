@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 const articleRepository = require('../repositories/articleRepository');
 const quicktipRepository = require('../repositories/quicktipRepository');
 const cheatsheetRepository = require('../repositories/cheatsheetRepository');
@@ -56,8 +56,8 @@ export const updateArticle = catchAsync(async (req: Request, res: Response, next
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '');
         // A conflict exists when another article already holds the new slug
-        const existing = await articleRepository.Model.findOne({ slug: newSlug }).lean();
-        if (existing && (existing as any).slug !== req.params.title) {
+        const existing: { slug?: string } | null = await articleRepository.Model.findOne({ slug: newSlug }).lean();
+        if (existing && existing.slug !== req.params.title) {
             return next(new AppError('An article with this title already exists.', 409));
         }
         req.body.slug = newSlug;
@@ -122,8 +122,8 @@ export const getDrafts = catchAsync(async (req: Request, res: Response) => {
 export const getAdminStats = catchAsync(async (req: Request, res: Response) => {
     const [articleStats, tipsTotal, cheatsheetsTotal, topArticles] = await Promise.all([
         articleRepository.getStats(),
-        quicktipRepository.findAll({}).then((r: any[]) => r.length),
-        cheatsheetRepository.findAll({}).then((r: any[]) => r.length),
+        quicktipRepository.findAll({}).then((r: unknown[]) => r.length),
+        cheatsheetRepository.findAll({}).then((r: unknown[]) => r.length),
         articleRepository.findTopByViews(5),
     ]);
     res.status(200).json({

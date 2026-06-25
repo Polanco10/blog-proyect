@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
+import { IExperience, IEducation, ILanguageSkill } from '../types';
 const Resume = require('../models/resumeModel');
 
 type Lang = 'en' | 'es';
@@ -20,7 +21,7 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
     if (!doc) return next(new AppError('Resume not found. Run the seed script first.', 404));
 
     const sorted = [...(doc.experiences ?? [])].sort(
-        (a: any, b: any) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        (a: IExperience, b: IExperience) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
     );
 
     const resume = {
@@ -32,18 +33,17 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
         title: pick(doc.title, lang),
         location: pick(doc.location, lang),
         summary: pick(doc.summary, lang),
-        skills: doc.skills, // sin traducción
-        education: (doc.education ?? []).map((edu: any) => ({
+        education: (doc.education ?? []).map((edu: IEducation) => ({
             institution: edu.institution,
             degree: pick(edu.degree, lang),
             startDate: edu.startDate,
             endDate: edu.endDate,
         })),
-        languages: (doc.languages ?? []).map((l: any) => ({
+        languages: (doc.languages ?? []).map((l: ILanguageSkill) => ({
             language: pick(l.language, lang),
             level: pick(l.level, lang),
         })),
-        experiences: sorted.map((exp: any) => ({
+        experiences: sorted.map((exp: IExperience) => ({
             company: exp.company,
             role: pick(exp.role, lang),
             startDate: exp.startDate,
@@ -51,6 +51,7 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
             current: exp.current,
             description: pick(exp.description, lang),
             achievements: pick(exp.achievements, lang) ?? [],
+            skills: exp.skills,
         })),
     };
 

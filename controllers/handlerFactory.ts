@@ -21,7 +21,7 @@ function singularKey(collectionName: string): string {
 }
 
 //Factory functions - Funciones reutilizables para otros controladores
-exports.deleteOne = (Model: mongoose.Model<any>) =>
+exports.deleteOne = (Model: mongoose.Model<mongoose.Document>) =>
     catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         if (!mongoose.isValidObjectId(req.params.id)) return next(new AppError('No document found with that ID', 404));
         const doc = await Model.findByIdAndDelete(req.params.id);
@@ -34,7 +34,7 @@ exports.deleteOne = (Model: mongoose.Model<any>) =>
         });
     });
 
-exports.updateOne = (Model: mongoose.Model<any>) =>
+exports.updateOne = (Model: mongoose.Model<mongoose.Document>) =>
     catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         if (!mongoose.isValidObjectId(req.params.id)) return next(new AppError('No document found with that ID', 404));
         const key = singularKey(Model.collection.collectionName);
@@ -52,7 +52,7 @@ exports.updateOne = (Model: mongoose.Model<any>) =>
         });
     });
 
-exports.createOne = (Model: mongoose.Model<any>) =>
+exports.createOne = (Model: mongoose.Model<mongoose.Document>) =>
     catchAsync(async (req: Request, res: Response) => {
         const key = singularKey(Model.collection.collectionName);
         const doc = await Model.create(req.body);
@@ -62,7 +62,7 @@ exports.createOne = (Model: mongoose.Model<any>) =>
         });
     });
 
-exports.getOne = (Model: mongoose.Model<any>) =>
+exports.getOne = (Model: mongoose.Model<mongoose.Document>) =>
     catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         if (!mongoose.isValidObjectId(req.params.id)) return next(new AppError('No document found with that ID', 404));
         const key = singularKey(Model.collection.collectionName);
@@ -76,7 +76,7 @@ exports.getOne = (Model: mongoose.Model<any>) =>
         });
     });
 
-exports.getAll = (Model: mongoose.Model<any>) =>
+exports.getAll = (Model: mongoose.Model<mongoose.Document>) =>
     catchAsync(async (req: Request, res: Response) => {
         const collectionName = Model.collection.collectionName;
         //Ejecutando la query

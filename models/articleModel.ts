@@ -74,7 +74,7 @@ articleSchema.index({ title: 'text', description: 'text' }); // full-text search
 // Genera el slug a partir del título antes de guardar
 articleSchema.plugin(slugPlugin);
 
-articleSchema.pre(/^find/, function (this: any, next) {
+articleSchema.pre(/^find/, function (this: mongoose.Query<unknown, unknown>, next) {
     // Solo mostrar artículos publicados cuando no se filtra por published explícitamente
     if (this.getFilter().published === undefined) {
         this.where({ published: true });

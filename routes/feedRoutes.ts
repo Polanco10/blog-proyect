@@ -22,9 +22,18 @@ router.get(
             .limit(20)
             .select('title description createdAt category tags imageCover _id');
 
+        interface FeedArticle {
+            _id: string;
+            title: string;
+            description: string;
+            createdAt: Date;
+            category: string;
+            imageCover?: string;
+        }
+
         const items = articles
             .map(
-                (a: any) => `
+                (a: FeedArticle) => `
     <item>
       <title>${escapeXml(a.title)}</title>
       <link>${siteUrl}/articles/${a._id}</link>

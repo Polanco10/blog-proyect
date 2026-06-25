@@ -9,6 +9,7 @@ export interface IUser extends Document {
     email: string;
     role: 'user' | 'admin';
     password: string;
+    passwordConfirm?: string;
     passwordChangedAt?: Date;
     passwordResetToken?: string;
     passwordResetExpires?: Date;
@@ -56,13 +57,58 @@ export interface ICheatsheet extends Document {
 
 // ─── Experience ──────────────────────────────────────────────────────────────
 
+export interface IBilingualText {
+    en: string;
+    es: string;
+}
+
+export interface ISkillGroups {
+    frontend: string[];
+    backend: string[];
+    tools: string[];
+}
+
 export interface IExperience extends Document {
     _id: Types.ObjectId;
     company: string;
-    role: string;
+    role: IBilingualText;
     startDate: Date;
     endDate?: Date;
-    description?: string;
+    current?: boolean;
+    description?: IBilingualText;
+    achievements?: { en: string[]; es: string[] };
+    skills?: ISkillGroups;
+}
+
+// ─── Resume ──────────────────────────────────────────────────────────────────
+
+export interface IEducation {
+    institution: string;
+    degree: IBilingualText;
+    startDate: string;
+    endDate?: string;
+}
+
+export interface ILanguageSkill {
+    language: IBilingualText;
+    level: IBilingualText;
+}
+
+export interface IResume extends Document {
+    _id: Types.ObjectId;
+    singleton: string;
+    name: string;
+    email: string;
+    website?: string;
+    linkedin?: string;
+    github?: string;
+    title: IBilingualText;
+    location: IBilingualText;
+    summary: IBilingualText;
+    education: IEducation[];
+    languages: ILanguageSkill[];
+    experiences: Types.DocumentArray<IExperience>;
+    updatedAt: Date;
 }
 
 // ─── Auth Request ─────────────────────────────────────────────────────────────

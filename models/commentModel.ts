@@ -42,7 +42,7 @@ commentSchema.index({ article: 1, approved: 1, createdAt: -1 });
 
 commentSchema.set('toJSON', {
     virtuals: true,
-    transform: (doc: any, ret: any) => {
+    transform: (doc: unknown, ret: Record<string, unknown>) => {
         ret.id = ret._id;
         delete ret._id;
         delete ret.__v;

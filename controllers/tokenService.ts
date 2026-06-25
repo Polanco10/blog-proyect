@@ -4,6 +4,7 @@ import User from '../models/userModel';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import { addToBlacklist } from '../utils/tokenBlacklist';
+import { IUser } from '../types';
 
 interface JwtPayload {
     id: string;
@@ -22,8 +23,8 @@ export const signToken = (id: string, role: string): string => {
     );
 };
 
-export const createSendToken = (user: any, statusCode: number, req: Request, res: Response): void => {
-    const token = signToken(user._id, user.role);
+export const createSendToken = (user: IUser, statusCode: number, req: Request, res: Response): void => {
+    const token = signToken(user._id.toString(), user.role);
     const cookieOptions = {
         expires: new Date(Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000),
         httpOnly: true,
@@ -32,7 +33,7 @@ export const createSendToken = (user: any, statusCode: number, req: Request, res
     };
 
     res.cookie('jwt', token, cookieOptions);
-    user.password = undefined;
+    (user as { password?: string }).password = undefined;
     res.status(statusCode).json({
         status: 'success',
         token,

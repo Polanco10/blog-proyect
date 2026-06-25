@@ -24,7 +24,6 @@ const seedResume = async (extraExperiences = []) => {
         title: { en: 'Full Stack Developer', es: 'Desarrollador Full Stack' },
         location: { en: 'Latin America (Remote)', es: 'Latinoamérica (Remoto)' },
         summary: { en: 'Full Stack Developer.', es: 'Desarrollador Full Stack.' },
-        skills: { frontend: ['Angular', 'TypeScript'], backend: ['Node.js'], tools: ['Git'] },
         education: [
             {
                 institution: 'Universidad Placeholder',
@@ -59,14 +58,21 @@ afterEach(async () => {
 
 describe('Resume Controller', () => {
     describe('GET /api/v1/resume/:lang', () => {
-        it('should return English resume with flat skills', async () => {
-            await seedResume();
+        it('should return English resume with per-experience skills', async () => {
+            await seedResume([
+                {
+                    company: 'Test Corp',
+                    role: { en: 'Developer', es: 'Desarrollador' },
+                    startDate: new Date('2023-01-01'),
+                    skills: { frontend: ['Angular', 'TypeScript'], backend: ['Node.js'], tools: ['Git'] },
+                },
+            ]);
             const res = await request(app).get('/api/v1/resume/en');
             expect(res.status).toBe(200);
             expect(res.body.data.resume.name).toBe('Diego Polanco');
             expect(res.body.data.resume.title).toBe('Full Stack Developer');
-            expect(Array.isArray(res.body.data.resume.skills.frontend)).toBe(true);
-            expect(res.body.data.resume.skills.frontend).toContain('Angular');
+            expect(Array.isArray(res.body.data.resume.experiences[0].skills.frontend)).toBe(true);
+            expect(res.body.data.resume.experiences[0].skills.frontend).toContain('Angular');
         });
 
         it('should return Spanish resume data', async () => {

@@ -47,7 +47,7 @@ const sendErrorProd = (err: AppError, req: Request, res: Response): void => {
         });
     } else {
         logger.error('Unexpected error', {
-            requestId: (req as any).requestId,
+            requestId: (req as Request & { requestId?: string }).requestId,
             name: err.name,
             message: err.message,
             stack: err.stack,
@@ -66,13 +66,13 @@ const handleJWTExpiredError = (): AppError => new AppError('Your token has expir
 
 module.exports = (err: MongooseError & AppError, req: Request, res: Response, _next: NextFunction): void => {
     //Error handling middleware - maneja errores operacionales y errores inesperados
-    (err as any).statusCode = (err as any).statusCode || 500;
-    (err as any).status = (err as any).status || 'error';
+    err.statusCode = err.statusCode || 500;
+    err.status = err.status || 'error';
 
     // Transformar errores de Mongoose/JWT a AppError con código correcto (todos los entornos)
     let error: AppError = Object.assign(err) as AppError;
     if (error.name === 'CastError') error = handleCastErrorDB(err);
-    if ((err as any).code === 11000) error = handleDuplicateFieldsDB(err);
+    if (err.code === 11000) error = handleDuplicateFieldsDB(err);
     if (error.name === 'ValidationError') error = handleValidationErrorDB(err);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();

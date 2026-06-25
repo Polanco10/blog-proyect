@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
+import { IExperience } from '../types';
 const Resume = require('../models/resumeModel');
 
 // GET /api/v1/experiences — perfil + experiencias ordenadas por fecha
@@ -9,7 +10,7 @@ exports.getAllExperiences = catchAsync(async (_req: Request, res: Response, _nex
 
     const experiences = resume
         ? [...(resume.experiences ?? [])].sort(
-              (a: any, b: any) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+              (a: IExperience, b: IExperience) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           )
         : [];
 
@@ -27,7 +28,6 @@ exports.getAllExperiences = catchAsync(async (_req: Request, res: Response, _nex
                       title: resume.title,
                       location: resume.location,
                       summary: resume.summary,
-                      skills: resume.skills,
                       education: resume.education,
                       languages: resume.languages,
                   }

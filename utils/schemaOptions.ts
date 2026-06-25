@@ -5,7 +5,7 @@ function createSchemaOptions(...extraDeleteFields: string[]): SchemaOptions {
     return {
         toJSON: {
             virtuals: true,
-            transform: (_doc: any, ret: any) => {
+            transform: (_doc: unknown, ret: Record<string, unknown>) => {
                 delete ret._id;
                 delete ret.id;
                 delete ret.__v;

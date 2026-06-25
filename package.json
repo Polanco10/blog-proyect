@@ -15,8 +15,8 @@
         "lint:fix": "eslint . --ext .js,.ts --fix",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "seed:resume": "node data/seed-resume.js",
-        "seed:resume:reset": "node data/seed-resume.js --reset",
+        "seed:resume": "npx tsx data/seed-resume.ts",
+        "seed:resume:reset": "npx tsx data/seed-resume.ts --reset",
         "prepare": "husky"
     },
     "author": "Diego Polanco",

@@ -1,4 +1,4 @@
-import { Model, Document, Query } from 'mongoose';
+import { Model, Document, Query, FilterQuery, UpdateQuery } from 'mongoose';
 import APIFeatures from '../utils/apiFeatures';
 
 /**
@@ -65,7 +65,7 @@ class BaseRepository<T extends Document = Document> {
      * Actualiza un documento por ID y retorna la versión actualizada.
      */
     async updateById(id: string, data: Partial<T>): Promise<T | null> {
-        return this.Model.findByIdAndUpdate(id, data as any, {
+        return this.Model.findByIdAndUpdate(id, data as UpdateQuery<T>, {
             new: true,
             runValidators: true,
         }) as Promise<T | null>;
@@ -82,14 +82,14 @@ class BaseRepository<T extends Document = Document> {
      * Busca un documento por slug.
      */
     async findBySlug(slug: string): Promise<T | null> {
-        return this.Model.findOne({ slug } as any) as Promise<T | null>;
+        return this.Model.findOne({ slug } as FilterQuery<T>) as Promise<T | null>;
     }
 
     /**
      * Actualiza un documento por slug y retorna la versión actualizada.
      */
     async updateBySlug(slug: string, data: Partial<T>): Promise<T | null> {
-        return this.Model.findOneAndUpdate({ slug } as any, data as any, {
+        return this.Model.findOneAndUpdate({ slug } as FilterQuery<T>, data as UpdateQuery<T>, {
             new: true,
             runValidators: true,
         }) as Promise<T | null>;
@@ -99,7 +99,7 @@ class BaseRepository<T extends Document = Document> {
      * Elimina un documento por slug.
      */
     async deleteBySlug(slug: string): Promise<T | null> {
-        return this.Model.findOneAndDelete({ slug } as any) as Promise<T | null>;
+        return this.Model.findOneAndDelete({ slug } as FilterQuery<T>) as Promise<T | null>;
     }
 }
 

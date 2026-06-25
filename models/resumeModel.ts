@@ -28,6 +28,11 @@ const experienceSchema = new mongoose.Schema(
             en: [{ type: String, trim: true }],
             es: [{ type: String, trim: true }],
         },
+        skills: {
+            frontend: [{ type: String, trim: true }],
+            backend: [{ type: String, trim: true }],
+            tools: [{ type: String, trim: true }],
+        },
     },
     { _id: true }
 );
@@ -77,24 +82,15 @@ const resumeSchema = new mongoose.Schema(
         title: { en: { type: String, trim: true }, es: { type: String, trim: true } },
         location: { en: { type: String, trim: true }, es: { type: String, trim: true } },
         summary: { en: { type: String, trim: true }, es: { type: String, trim: true } },
-
-        // Skills — no translation needed
-        skills: {
-            frontend: [String],
-            backend: [String],
-            tools: [String],
-        },
-
         education: [educationSchema],
         languages: [languageSchema],
         experiences: [experienceSchema],
-
         updatedAt: { type: Date, default: Date.now },
     },
     {
         toJSON: {
             virtuals: true,
-            transform: (doc: any, ret: any) => {
+            transform: (doc: unknown, ret: Record<string, unknown>) => {
                 delete ret._id;
                 delete ret.id;
                 delete ret.__v;

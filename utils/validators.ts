@@ -1,5 +1,11 @@
+import { Request, Response, NextFunction } from 'express';
 import validateFunction from './validate';
 const { CATEGORIES } = require('../constants');
+
+interface I18nString {
+    en?: string;
+    es?: string;
+}
 
 // Schemas de validación por recurso
 exports.validateArticle = validateFunction({
@@ -51,7 +57,7 @@ exports.validateSignup = validateFunction({
 });
 
 // Validación personalizada para Experience — role/description son objetos { en, es }
-function validateI18nString(field: string, value: any, required: boolean, errors: string[]) {
+function validateI18nString(field: string, value: I18nString | undefined, required: boolean, errors: string[]) {
     if (required && (!value || (!value.en && !value.es))) {
         errors.push(`${field}.en and ${field}.es are required`);
         return;
@@ -61,7 +67,7 @@ function validateI18nString(field: string, value: any, required: boolean, errors
     if (value.es !== undefined && typeof value.es !== 'string') errors.push(`${field}.es must be a string`);
 }
 
-exports.validateExperience = (req: any, _res: any, next: any) => {
+exports.validateExperience = (req: Request, _res: Response, next: NextFunction): void => {
     const errors: string[] = [];
     const { company, role, startDate } = req.body;
 
@@ -80,7 +86,7 @@ exports.validateExperience = (req: any, _res: any, next: any) => {
 };
 
 // PATCH — todos los campos son opcionales
-exports.validateExperiencePatch = (req: any, _res: any, next: any) => {
+exports.validateExperiencePatch = (req: Request, _res: Response, next: NextFunction): void => {
     const errors: string[] = [];
     const { company, role } = req.body;
 

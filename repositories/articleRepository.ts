@@ -89,8 +89,8 @@ class ArticleRepository extends BaseRepository<Document> {
         return {
             totalPublished,
             totalDrafts,
-            totalViews: (totalViews[0] as any)?.total || 0,
-            totalLikes: (totalLikes[0] as any)?.total || 0,
+            totalViews: (totalViews[0] as { total?: number } | undefined)?.total || 0,
+            totalLikes: (totalLikes[0] as { total?: number } | undefined)?.total || 0,
         };
     }
 }

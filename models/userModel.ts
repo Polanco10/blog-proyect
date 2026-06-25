@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema(
     {
         toJSON: {
             virtuals: true,
-            transform: (doc: any, ret: any) => {
+            transform: (doc: unknown, ret: Record<string, unknown>) => {
                 ret.id = ret._id;
                 delete ret._id;
                 delete ret.__v;
@@ -67,23 +67,23 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function (this: IUser & { passwordConfirm?: string }, next) {
     //document middleware - para encriptar la password / validacion de documento se hace antes del document middleware
     if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 12); // 12 -> valor recomendado para encriptar la pass
+    this.password = await bcrypt.hash(this.password as string, 12); // 12 -> valor recomendado para encriptar la pass
     this.passwordConfirm = undefined; //para no persistir en la bd este valor
     next();
 });
 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function (this: IUser, next) {
     // document middleware - Se setea la property passwordChangedAt -> con la fecha de modificacion de password
     if (!this.isModified('password') || this.isNew) return next();
 
-    this.passwordChangedAt = Date.now() - 1000; //Se le resta un segundo para asegurarse que no haya conflictos con el timestamp del JWT (que se ejecuta despues)
+    this.passwordChangedAt = new Date(Date.now() - 1000); //Se le resta un segundo para asegurarse que no haya conflictos con el timestamp del JWT (que se ejecuta despues)
     next();
 });
 
-userSchema.pre(/^find/, function (next) {
+userSchema.pre(/^find/, function (this: mongoose.Query<unknown, unknown>, next) {
     // query middleware - filtra los usuarios con active:true -> para hacer un delete "logico"
     this.find({ active: { $ne: false } });
     next();
