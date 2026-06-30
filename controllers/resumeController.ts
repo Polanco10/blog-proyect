@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
-import { IExperience, IEducation, ILanguageSkill } from '../types';
+import { IExperience, IEducation, ILanguageSkill, IProject } from '../types';
 const Resume = require('../models/resumeModel');
 
 type Lang = 'en' | 'es';
@@ -33,6 +33,7 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
         title: pick(doc.title, lang),
         location: pick(doc.location, lang),
         summary: pick(doc.summary, lang),
+        skills: doc.skills,
         education: (doc.education ?? []).map((edu: IEducation) => ({
             institution: edu.institution,
             degree: pick(edu.degree, lang),
@@ -52,6 +53,11 @@ exports.getResume = catchAsync(async (req: Request, res: Response, next: NextFun
             description: pick(exp.description, lang),
             achievements: pick(exp.achievements, lang) ?? [],
             skills: exp.skills,
+        })),
+        projects: (doc.projects ?? []).map((proj: IProject) => ({
+            title: pick(proj.title, lang),
+            description: pick(proj.description, lang),
+            url: proj.url,
         })),
     };
 

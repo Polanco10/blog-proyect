@@ -94,6 +94,12 @@ export interface ILanguageSkill {
     level: IBilingualText;
 }
 
+export interface IProject {
+    title: IBilingualText;
+    description: IBilingualText;
+    url?: string;
+}
+
 export interface IResume extends Document {
     _id: Types.ObjectId;
     singleton: string;
@@ -105,9 +111,11 @@ export interface IResume extends Document {
     title: IBilingualText;
     location: IBilingualText;
     summary: IBilingualText;
+    skills?: ISkillGroups;
     education: IEducation[];
     languages: ILanguageSkill[];
     experiences: Types.DocumentArray<IExperience>;
+    projects?: IProject[];
     updatedAt: Date;
 }
 

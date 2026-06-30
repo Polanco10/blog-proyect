@@ -66,6 +66,22 @@ const languageSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// ─── Project subdocument ──────────────────────────────────────────────────────
+const projectSchema = new mongoose.Schema(
+    {
+        title: {
+            en: { type: String, trim: true, required: true },
+            es: { type: String, trim: true, required: true },
+        },
+        description: {
+            en: { type: String, trim: true, required: true },
+            es: { type: String, trim: true, required: true },
+        },
+        url: { type: String, trim: true },
+    },
+    { _id: false }
+);
+
 // ─── Root Resume schema (singleton) ──────────────────────────────────────────
 const resumeSchema = new mongoose.Schema(
     {
@@ -82,9 +98,18 @@ const resumeSchema = new mongoose.Schema(
         title: { en: { type: String, trim: true }, es: { type: String, trim: true } },
         location: { en: { type: String, trim: true }, es: { type: String, trim: true } },
         summary: { en: { type: String, trim: true }, es: { type: String, trim: true } },
+
+        // Top-level skills summary — no translation
+        skills: {
+            frontend: [{ type: String, trim: true }],
+            backend: [{ type: String, trim: true }],
+            tools: [{ type: String, trim: true }],
+        },
+
         education: [educationSchema],
         languages: [languageSchema],
         experiences: [experienceSchema],
+        projects: [projectSchema],
         updatedAt: { type: Date, default: Date.now },
     },
     {
