@@ -4,6 +4,7 @@ const quicktipRepository = require('../repositories/quicktipRepository');
 const cheatsheetRepository = require('../repositories/cheatsheetRepository');
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appError';
+import slugify from '../utils/slugify';
 import { AuthRequest } from '../types';
 
 // Middleware — asigna el usuario loggeado como author del artículo
@@ -50,11 +51,7 @@ export const createArticle = catchAsync(async (req: Request, res: Response) => {
 export const updateArticle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // If the title is changing, regenerate the slug and check for conflicts
     if (req.body.title) {
-        const newSlug = req.body.title
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
+        const newSlug = slugify(req.body.title);
         // A conflict exists when another article already holds the new slug
         const existing: { slug?: string } | null = await articleRepository.Model.findOne({ slug: newSlug }).lean();
         if (existing && existing.slug !== req.params.title) {

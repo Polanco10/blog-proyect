@@ -17,6 +17,8 @@
         "format:check": "prettier --check .",
         "seed:resume": "npx tsx data/seed-resume.ts",
         "seed:resume:reset": "npx tsx data/seed-resume.ts --reset",
+        "seed:articles": "npx tsx data/seed-articles.ts",
+        "seed:articles:reset": "npx tsx data/seed-articles.ts --reset",
         "prepare": "husky"
     },
     "author": "Diego Polanco",

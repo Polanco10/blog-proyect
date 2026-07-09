@@ -985,7 +985,7 @@
                 "type": "object",
                 "properties": {
                     "_id": { "type": "string", "example": "615930d4f37971021d64b413" },
-                    "slug": { "type": "string", "description": "Slug único generado automáticamente desde el título (solo minúsculas, separado por guiones)", "example": "guia-completa-de-typescript", "readOnly": true },
+                    "slug": { "type": "string", "description": "Slug único generado automáticamente desde el título (solo minúsculas, separado por guiones; tildes y ñ se normalizan: á → a, ñ → n; sin guiones al inicio/final)", "example": "guia-completa-de-typescript", "readOnly": true },
                     "title": { "type": "string", "example": "Guía completa de TypeScript" },
                     "description": { "type": "string" },
                     "content": { "type": "string" },

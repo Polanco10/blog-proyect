@@ -43,7 +43,12 @@ afterAll(async () => {
 });
 
 function slugFromTitle(title) {
-    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    return title
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 describe('Article API Integration', () => {

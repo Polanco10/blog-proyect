@@ -86,17 +86,19 @@ CLOUDINARY_API_SECRET=...
 
 ## Scripts Disponibles
 
-| Comando                     | Descripción                                                           |
-| --------------------------- | --------------------------------------------------------------------- |
-| `npm run dev`               | Servidor de desarrollo con nodemon + tsx (auto-reload)                |
-| `npm start`                 | Inicio estándar desde build compilado (`dist/server.js`)              |
-| `npm run prod`              | Modo producción con tsx (`NODE_ENV=production`)                       |
-| `npm run build`             | Verificación de tipos TypeScript (`tsc --noEmit`)                     |
-| `npm run debug`             | Depuración con ndb                                                    |
-| `npm test`                  | Ejecutar pruebas Jest (MongoDB Memory Server)                         |
-| `npm run test:verbose`      | Salida detallada de pruebas                                           |
-| `npm run seed:resume`       | Poblar el documento singleton de Resume (perfil + experiencias EN/ES) |
-| `npm run seed:resume:reset` | Eliminar y re-sembrar el documento de Resume desde cero               |
+| Comando                       | Descripción                                                             |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`                 | Servidor de desarrollo con nodemon + tsx (auto-reload)                  |
+| `npm start`                   | Inicio estándar desde build compilado (`dist/server.js`)                |
+| `npm run prod`                | Modo producción con tsx (`NODE_ENV=production`)                         |
+| `npm run build`               | Verificación de tipos TypeScript (`tsc --noEmit`)                       |
+| `npm run debug`               | Depuración con ndb                                                      |
+| `npm test`                    | Ejecutar pruebas Jest (MongoDB Memory Server)                           |
+| `npm run test:verbose`        | Salida detallada de pruebas                                             |
+| `npm run seed:resume`         | Poblar el documento singleton de Resume (perfil + experiencias EN/ES)   |
+| `npm run seed:resume:reset`   | Eliminar y re-sembrar el documento de Resume desde cero                 |
+| `npm run seed:articles`       | Insertar/actualizar los artículos de `data/articles/*.md` (idempotente) |
+| `npm run seed:articles:reset` | Eliminar y re-sembrar los artículos definidos en `data/articles/`       |
 
 ---
 
@@ -149,6 +151,7 @@ blog-proyect/
 │   ├── appError.ts             # Clase de error personalizada (statusCode, isOperational)
 │   ├── catchAsync.ts           # Wrapper para errores asíncronos
 │   ├── slugPlugin.ts           # Plugin de Mongoose para generar slug desde título
+│   ├── slugify.ts              # Genera slugs URL-safe (normaliza tildes/ñ, sin guiones extremos)
 │   ├── schemaOptions.ts        # Opciones reutilizables de serialización JSON para schemas
 │   ├── tokenBlacklist.ts       # In-memory JWT blacklist con auto-purge
 │   ├── upload.js               # Procesamiento de imágenes con Multer + Sharp
@@ -156,7 +159,9 @@ blog-proyect/
 │   ├── logger.ts               # Logging con Winston
 │   └── validators.ts           # Middleware de validación de entrada (express-validator)
 ├── data/
-│   └── seed-resume.js          # Script de seed: pobla el documento singleton de Resume (perfil + experiencias EN/ES)
+│   ├── seed-resume.js          # Script de seed: pobla el documento singleton de Resume (perfil + experiencias EN/ES)
+│   ├── seed-articles.ts        # Script de seed: upsert de artículos desde data/articles/*.md (frontmatter + markdown)
+│   └── articles/               # Artículos en markdown con frontmatter (title, description, tags, published)
 ├── tests/
 │   ├── integration/            # Pruebas completas de petición/respuesta
 │   │   ├── article.test.js
