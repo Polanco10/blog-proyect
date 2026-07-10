@@ -1,1243 +1,2901 @@
 {
-    "openapi": "3.0.0",
-    "info": {
-        "version": "2.0.0",
-        "title": "Polanco.dev API",
-        "description": "API RESTful que alimenta Polanco.dev — blog técnico, portafolio profesional, cheatsheets y trucos rápidos. Construida con Node.js, Express y MongoDB."
+  "openapi": "3.0.0",
+  "info": {
+    "version": "2.0.0",
+    "title": "Polanco.dev API",
+    "description": "API RESTful que alimenta Polanco.dev — blog técnico, portafolio profesional, cheatsheets y trucos rápidos. Construida con Node.js, Express y MongoDB."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Servidor de desarrollo local"
     },
-    "servers": [
-        {
-            "url": "http://localhost:3000/api/v1",
-            "description": "Servidor de desarrollo local"
-        },
-        {
-            "url": "https://your-app.up.railway.app/api/v1",
-            "description": "Servidor de producción (Railway)"
-        }
-    ],
-    "tags": [
-        {
-            "name": "Authentication",
-            "description": "Registro, login y gestión de sesión"
-        },
-        {
-            "name": "Users",
-            "description": "Gestión de usuarios (solo admin)"
-        },
-        {
-            "name": "Current User",
-            "description": "Operaciones del usuario autenticado"
-        },
-        {
-            "name": "Articles",
-            "description": "CRUD de artículos del blog"
-        },
-        {
-            "name": "Comments",
-            "description": "Sistema de comentarios con flujo de aprobación"
-        },
-        {
-            "name": "Experiences",
-            "description": "Experiencia laboral / portafolio"
-        },
-        {
-            "name": "Cheatsheets",
-            "description": "Hojas de referencia rápida"
-        },
-        {
-            "name": "QuickTips",
-            "description": "Snippets y trucos de código"
-        },
-        {
-            "name": "Upload",
-            "description": "Subida y procesamiento de imágenes"
-        },
-        {
-            "name": "Contact",
-            "description": "Formulario de contacto por email"
-        },
-        {
-            "name": "Resume",
-            "description": "Datos del CV/Portafolio combinando perfil estático y experiencias dinámicas"
-        }
-    ],
-    "paths": {
-        "/users/signup": {
-            "post": {
-                "tags": ["Authentication"],
-                "summary": "Registrar nuevo usuario",
-                "description": "Crea una nueva cuenta de usuario y devuelve un token JWT.",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserSignup"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "Usuario creado correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
-                    "400": { "$ref": "#/components/responses/400" }
-                }
-            }
-        },
-        "/users/login": {
-            "post": {
-                "tags": ["Authentication"],
-                "summary": "Iniciar sesión",
-                "description": "Autentica con email y contraseña, devuelve un token JWT.",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": ["email", "password"],
-                                "properties": {
-                                    "email": { "type": "string", "format": "email", "example": "admin@polanco.dev" },
-                                    "password": { "type": "string", "example": "pass1234" }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Login exitoso", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/users/logout": {
-            "get": {
-                "tags": ["Authentication"],
-                "summary": "Cerrar sesión",
-                "description": "Invalida la cookie de sesión JWT y añade el token a la blacklist. Requiere autenticación con rol admin.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Sesión cerrada correctamente" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/users/refresh-token": {
-            "post": {
-                "tags": ["Authentication"],
-                "summary": "Refrescar token JWT",
-                "description": "Genera un nuevo token JWT a partir del token actual (aceptado hasta 7 días después de su expiración). Requiere autenticación con rol admin.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Nuevo token generado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/users/forgotPassword": {
-            "post": {
-                "tags": ["Authentication"],
-                "summary": "Solicitar restablecimiento de contraseña",
-                "description": "Envía un email con token de restablecimiento.",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": ["email"],
-                                "properties": {
-                                    "email": { "type": "string", "format": "email" }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Email enviado correctamente" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/users/resetPassword/{token}": {
-            "patch": {
-                "tags": ["Authentication"],
-                "summary": "Restablecer contraseña",
-                "description": "Restablece la contraseña usando el token recibido por email.",
-                "parameters": [
-                    { "name": "token", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Token de restablecimiento recibido por email" }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": ["password", "passwordConfirm"],
-                                "properties": {
-                                    "password": { "type": "string" },
-                                    "passwordConfirm": { "type": "string" }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Contraseña restablecida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
-                    "400": { "$ref": "#/components/responses/400" }
-                }
-            }
-        },
-        "/users/me": {
-            "get": {
-                "tags": ["Current User"],
-                "summary": "Obtener perfil propio",
-                "description": "Devuelve los datos del usuario actualmente autenticado.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/users/updateMe": {
-            "patch": {
-                "tags": ["Current User"],
-                "summary": "Actualizar datos propios",
-                "description": "Actualiza nombre o email del usuario autenticado (no la contraseña).",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "name": { "type": "string" },
-                                    "email": { "type": "string", "format": "email" }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Usuario actualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/users/updateMyPassword": {
-            "patch": {
-                "tags": ["Current User"],
-                "summary": "Actualizar contraseña propia",
-                "description": "Actualiza la contraseña del usuario autenticado.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": ["passwordCurrent", "password", "passwordConfirm"],
-                                "properties": {
-                                    "passwordCurrent": { "type": "string" },
-                                    "password": { "type": "string" },
-                                    "passwordConfirm": { "type": "string" }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Contraseña actualizada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/users/deleteMe": {
-            "delete": {
-                "tags": ["Current User"],
-                "summary": "Desactivar cuenta propia",
-                "description": "Desactiva (soft-delete) la cuenta del usuario autenticado.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "204": { "description": "Cuenta desactivada" },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/users": {
-            "get": {
-                "tags": ["Users"],
-                "summary": "Listar todos los usuarios",
-                "description": "Devuelve todos los usuarios registrados. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Ok" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/users/{id}": {
-            "get": {
-                "tags": ["Users"],
-                "summary": "Obtener usuario por ID",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "example": "615930d4f37971021d64b413" }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "patch": {
-                "tags": ["Users"],
-                "summary": "Actualizar usuario por ID",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "name": { "type": "string" },
-                                    "email": { "type": "string" },
-                                    "role": { "type": "string", "enum": ["user", "admin"] }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Usuario actualizado" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "delete": {
-                "tags": ["Users"],
-                "summary": "Eliminar usuario por ID",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "204": { "description": "Usuario eliminado" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Listar artículos",
-                "description": "Devuelve todos los artículos publicados. Soporta filtrado, ordenamiento, paginación y selección de campos.",
-                "parameters": [
-                    { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["Programacion", "Idioma"] }, "description": "Filtrar por categoría" },
-                    { "name": "sort", "in": "query", "schema": { "type": "string" }, "description": "Ordenar por campo(s), ej: -createdAt,title" },
-                    { "name": "fields", "in": "query", "schema": { "type": "string" }, "description": "Seleccionar campos, ej: title,description" },
-                    { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
-                    { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
-                    { "name": "tags", "in": "query", "schema": { "type": "string" }, "description": "Filtrar por tags, ej: Angular,TypeScript" }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Article" } } } } }
-                }
-            },
-            "post": {
-                "tags": ["Articles"],
-                "summary": "Crear artículo",
-                "description": "Crea un nuevo artículo. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/ArticleInput" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "Artículo creado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Article" } } } },
-                    "400": { "$ref": "#/components/responses/400" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/articles/top-5": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Top 5 artículos",
-                "description": "Devuelve los 5 artículos con más vistas, ordenados por fecha de creación descendente.",
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Article" } } } } }
-                }
-            }
-        },
-        "/articles/search": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Buscar artículos",
-                "description": "Búsqueda de texto completo en título, descripción y contenido.",
-                "parameters": [
-                    { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Término de búsqueda", "example": "typescript" }
-                ],
-                "responses": {
-                    "200": { "description": "Resultados de búsqueda", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Article" } } } } }
-                }
-            }
-        },
-        "/articles/drafts": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Listar borradores",
-                "description": "Devuelve artículos en estado borrador. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Ok" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/articles/admin/stats": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Estadísticas del dashboard",
-                "description": "Devuelve estadísticas agregadas para el panel de administración (total artículos, vistas, likes, etc.). Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "responses": {
-                    "200": { "description": "Ok" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/articles/{id}": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Obtener artículo por slug",
-                "description": "Busca el artículo por su slug único, generado automáticamente desde el título al crear o actualizar el artículo.",
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo (generado desde el título)", "example": "guia-completa-de-typescript" }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Article" } } } },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "patch": {
-                "tags": ["Articles"],
-                "summary": "Actualizar artículo",
-                "description": "Actualiza parcialmente un artículo. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/ArticleInput" }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Artículo actualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Article" } } } },
-                    "400": { "$ref": "#/components/responses/400" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "delete": {
-                "tags": ["Articles"],
-                "summary": "Eliminar artículo",
-                "description": "Elimina un artículo por ID. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "204": { "description": "Artículo eliminado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles/{id}/view": {
-            "patch": {
-                "tags": ["Articles"],
-                "summary": "Incrementar contador de vistas",
-                "description": "Incrementa en 1 el contador de vistas del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 10 minutos.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo" }
-                ],
-                "responses": {
-                    "200": { "description": "Vistas incrementadas" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles/{id}/like": {
-            "patch": {
-                "tags": ["Articles"],
-                "summary": "Dar like a un artículo",
-                "description": "Incrementa en 1 el contador de likes del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 24 horas.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Slug del artículo" }
-                ],
-                "responses": {
-                    "200": { "description": "Like registrado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles/{id}/related": {
-            "get": {
-                "tags": ["Articles"],
-                "summary": "Artículos relacionados",
-                "description": "Devuelve hasta 4 artículos de la misma categoría, excluyendo el actual. Recibe el slug del artículo.",
-                "parameters": [
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "MongoDB ObjectId o slug del artículo" }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Article" } } } } },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles/{articleId}/comments": {
-            "get": {
-                "tags": ["Comments"],
-                "summary": "Listar comentarios aprobados",
-                "description": "Devuelve todos los comentarios aprobados de un artículo.",
-                "parameters": [
-                    { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Comment" } } } } }
-                }
-            },
-            "post": {
-                "tags": ["Comments"],
-                "summary": "Enviar comentario",
-                "description": "Crea un comentario para un artículo. Queda en estado pendiente hasta ser aprobado. Requiere autenticación con rol admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/CommentInput" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "Comentario enviado, pendiente de aprobación" },
-                    "400": { "$ref": "#/components/responses/400" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/articles/{articleId}/comments/pending": {
-            "get": {
-                "tags": ["Comments"],
-                "summary": "Listar comentarios pendientes",
-                "description": "Devuelve los comentarios pendientes de aprobación de un artículo. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Comment" } } } } },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/articles/{articleId}/comments/{id}/approve": {
-            "patch": {
-                "tags": ["Comments"],
-                "summary": "Aprobar comentario",
-                "description": "Cambia el estado del comentario de 'pending' a 'approved'. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } },
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "200": { "description": "Comentario aprobado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/articles/{articleId}/comments/{id}": {
-            "delete": {
-                "tags": ["Comments"],
-                "summary": "Eliminar comentario",
-                "description": "Elimina un comentario de un artículo. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
-                    { "name": "articleId", "in": "path", "required": true, "schema": { "type": "string" } },
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-                ],
-                "responses": {
-                    "204": { "description": "Comentario eliminado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/experiences": {
-            "get": {
-                "tags": ["Experiences"],
-                "summary": "Obtener perfil y experiencias laborales",
-                "description": "Devuelve el perfil bilingüe del CV y el listado de experiencias, ambos con campos EN/ES sin resolver.",
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "status": { "type": "string", "example": "success" },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "profile": { "$ref": "#/components/schemas/ResumeProfile" },
-                                                "experiences": { "type": "array", "items": { "$ref": "#/components/schemas/Experience" } }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": ["Experiences"],
-                "summary": "Crear experiencia",
-                "description": "Solo admin. Añade una experiencia al documento singleton de Resume.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/ExperienceInput" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "Experiencia creada", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "data": { "type": "object", "properties": { "experience": { "$ref": "#/components/schemas/Experience" } } } } } } } },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/experiences/{id}": {
-            "patch": {
-                "tags": ["Experiences"],
-                "summary": "Actualizar experiencia",
-                "description": "Solo admin. Actualiza una experiencia embebida por su _id.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "ObjectId de la experiencia embebida" }],
-                "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperienceInput" } } } },
-                "responses": {
-                    "200": { "description": "Experiencia actualizada" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "delete": {
-                "tags": ["Experiences"],
-                "summary": "Eliminar experiencia",
-                "description": "Solo admin. Elimina una experiencia embebida por su _id.",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "ObjectId de la experiencia embebida" }],
-                "responses": {
-                    "204": { "description": "Experiencia eliminada" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            }
-        },
-        "/cheatsheets": {
-            "get": {
-                "tags": ["Cheatsheets"],
-                "summary": "Listar cheatsheets",
-                "parameters": [
-                    { "name": "language", "in": "query", "schema": { "type": "string" }, "description": "Filtrar por lenguaje" },
-                    { "name": "sort", "in": "query", "schema": { "type": "string" } },
-                    { "name": "page", "in": "query", "schema": { "type": "integer" } },
-                    { "name": "limit", "in": "query", "schema": { "type": "integer" } }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Cheatsheet" } } } } }
-                }
-            },
-            "post": {
-                "tags": ["Cheatsheets"],
-                "summary": "Crear cheatsheet",
-                "description": "Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/Cheatsheet" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "Cheatsheet creado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/cheatsheets/{id}": {
-            "get": {
-                "tags": ["Cheatsheets"],
-                "summary": "Obtener cheatsheet por ID",
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "responses": {
-                    "200": { "description": "Ok" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "patch": {
-                "tags": ["Cheatsheets"],
-                "summary": "Actualizar cheatsheet",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cheatsheet" } } } },
-                "responses": {
-                    "200": { "description": "Cheatsheet actualizado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            },
-            "delete": {
-                "tags": ["Cheatsheets"],
-                "summary": "Eliminar cheatsheet",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "responses": {
-                    "204": { "description": "Cheatsheet eliminado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/quicktips": {
-            "get": {
-                "tags": ["QuickTips"],
-                "summary": "Listar trucos rápidos",
-                "parameters": [
-                    { "name": "language", "in": "query", "schema": { "type": "string" }, "description": "Filtrar por lenguaje" },
-                    { "name": "difficulty", "in": "query", "schema": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] } },
-                    { "name": "sort", "in": "query", "schema": { "type": "string" } },
-                    { "name": "page", "in": "query", "schema": { "type": "integer" } },
-                    { "name": "limit", "in": "query", "schema": { "type": "integer" } }
-                ],
-                "responses": {
-                    "200": { "description": "Ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/QuickTip" } } } } }
-                }
-            },
-            "post": {
-                "tags": ["QuickTips"],
-                "summary": "Crear truco rápido",
-                "description": "Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/QuickTip" }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": { "description": "QuickTip creado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/quicktips/{id}": {
-            "get": {
-                "tags": ["QuickTips"],
-                "summary": "Obtener truco rápido por ID",
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "responses": {
-                    "200": { "description": "Ok" },
-                    "404": { "$ref": "#/components/responses/404" }
-                }
-            },
-            "patch": {
-                "tags": ["QuickTips"],
-                "summary": "Actualizar truco rápido",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuickTip" } } } },
-                "responses": {
-                    "200": { "description": "QuickTip actualizado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            },
-            "delete": {
-                "tags": ["QuickTips"],
-                "summary": "Eliminar truco rápido",
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-                "responses": {
-                    "204": { "description": "QuickTip eliminado" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/upload/article-image": {
-            "post": {
-                "tags": ["Upload"],
-                "summary": "Subir imagen de portada de artículo",
-                "description": "Procesa y almacena la imagen de portada. Redimensiona a 1200x630px en formato WebP. Solo admin.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "image": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "Imagen de portada (JPG, PNG, WebP — máx. 5MB)"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Imagen procesada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "imageCover": { "type": "string", "description": "URL pública de la imagen procesada" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": { "$ref": "#/components/responses/400" },
-                    "401": { "$ref": "#/components/responses/401" },
-                    "403": { "$ref": "#/components/responses/403" }
-                }
-            }
-        },
-        "/upload/user-photo": {
-            "post": {
-                "tags": ["Upload"],
-                "summary": "Subir foto de perfil de usuario",
-                "description": "Procesa y almacena la foto de perfil. Redimensiona a 200x200px en formato WebP.",
-                "security": [{ "bearerAuth": [] }],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "photo": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "Foto de perfil (JPG, PNG, WebP — máx. 5MB)"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Foto procesada correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "photo": { "type": "string", "description": "URL pública de la foto procesada" }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": { "$ref": "#/components/responses/400" },
-                    "401": { "$ref": "#/components/responses/401" }
-                }
-            }
-        },
-        "/resume/{lang}": {
-            "get": {
-                "tags": ["Resume"],
-                "summary": "Obtener datos del CV",
-                "description": "Devuelve los datos del CV combinando el perfil estático de `data/resume.json` con las experiencias laborales dinámicas de MongoDB. El campo `slug` en cada artículo permite enlazar directamente desde el PDF generado.",
-                "parameters": [
-                    {
-                        "name": "lang",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string", "enum": ["en", "es"] },
-                        "description": "Idioma del CV",
-                        "example": "en"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Datos del CV obtenidos correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": { "$ref": "#/components/schemas/ResumeResponse" }
-                            }
-                        }
-                    },
-                    "400": { "$ref": "#/components/responses/400" }
-                }
-            }
-        },
-        "/contact": {
-            "post": {
-                "tags": ["Contact"],
-                "summary": "Enviar mensaje de contacto",
-                "description": "Envía un email al administrador con el mensaje del formulario de contacto.",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": { "$ref": "#/components/schemas/ContactInput" }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": { "description": "Mensaje enviado correctamente" },
-                    "400": { "$ref": "#/components/responses/400" }
-                }
-            }
-        }
+    {
+      "url": "https://your-app.up.railway.app/api/v1",
+      "description": "Servidor de producción (Railway)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Registro, login y gestión de sesión"
     },
-    "components": {
-        "schemas": {
-            "User": {
-                "type": "object",
-                "properties": {
-                    "_id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "email": { "type": "string", "format": "email" },
-                    "photo": { "type": "string" },
-                    "role": { "type": "string", "enum": ["user", "admin"] },
-                    "active": { "type": "boolean" },
-                    "passwordChangedAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "UserSignup": {
-                "required": ["name", "email", "password", "passwordConfirm"],
-                "properties": {
-                    "name": { "type": "string", "example": "Diego Polanco" },
-                    "email": { "type": "string", "format": "email", "example": "diego@polanco.dev" },
-                    "password": { "type": "string", "minLength": 8, "example": "pass1234" },
-                    "passwordConfirm": { "type": "string", "example": "pass1234" }
-                }
-            },
-            "AuthResponse": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "example": "success" },
-                    "token": { "type": "string", "description": "JWT token" },
-                    "data": {
-                        "type": "object",
-                        "properties": {
-                            "user": { "$ref": "#/components/schemas/User" }
-                        }
-                    }
-                }
-            },
-            "Article": {
-                "type": "object",
-                "properties": {
-                    "_id": { "type": "string", "example": "615930d4f37971021d64b413" },
-                    "slug": { "type": "string", "description": "Slug único generado automáticamente desde el título (solo minúsculas, separado por guiones; tildes y ñ se normalizan: á → a, ñ → n; sin guiones al inicio/final)", "example": "guia-completa-de-typescript", "readOnly": true },
-                    "title": { "type": "string", "example": "Guía completa de TypeScript" },
-                    "description": { "type": "string" },
-                    "content": { "type": "string" },
-                    "imageCover": { "type": "string" },
-                    "category": { "type": "string", "enum": ["Programacion", "Idioma"] },
-                    "tags": { "type": "array", "items": { "type": "string" } },
-                    "author": { "$ref": "#/components/schemas/User" },
-                    "views": { "type": "integer", "default": 0 },
-                    "likes": { "type": "integer", "default": 0 },
-                    "published": { "type": "boolean", "default": true, "description": "false = borrador, true = publicado" },
-                    "createdAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "ArticleInput": {
-                "required": ["title", "description", "category"],
-                "properties": {
-                    "title": { "type": "string", "minLength": 10, "maxLength": 40, "example": "Guía completa de TypeScript", "description": "Título único. El slug se genera automáticamente." },
-                    "description": { "type": "string", "example": "Aprende TypeScript desde cero" },
-                    "content": { "type": "string", "description": "Contenido en Markdown" },
-                    "imageCover": { "type": "string", "description": "URL de la imagen de portada (obtenida de POST /upload/article-image)" },
-                    "category": { "type": "string", "enum": ["Programacion", "Idioma"] },
-                    "tags": { "type": "array", "items": { "type": "string" } },
-                    "published": { "type": "boolean", "default": true, "description": "false para guardar como borrador" }
-                }
-            },
-            "Comment": {
-                "type": "object",
-                "properties": {
-                    "_id": { "type": "string" },
-                    "author": { "type": "string" },
-                    "email": { "type": "string", "format": "email" },
-                    "body": { "type": "string" },
-                    "status": { "type": "string", "enum": ["pending", "approved"], "default": "pending" },
-                    "article": { "type": "string", "description": "ID del artículo" },
-                    "createdAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "CommentInput": {
-                "required": ["author", "email", "body"],
-                "properties": {
-                    "author": { "type": "string", "example": "María García" },
-                    "email": { "type": "string", "format": "email", "example": "maria@example.com" },
-                    "body": { "type": "string", "example": "Excelente artículo, muy bien explicado." }
-                }
-            },
-            "BilingualString": {
-                "type": "object",
-                "description": "Campo con valor en inglés y español",
-                "properties": {
-                    "en": { "type": "string" },
-                    "es": { "type": "string" }
-                },
-                "required": ["en", "es"]
-            },
-            "BilingualStringArray": {
-                "type": "object",
-                "description": "Lista de cadenas bilingüe",
-                "properties": {
-                    "en": { "type": "array", "items": { "type": "string" } },
-                    "es": { "type": "array", "items": { "type": "string" } }
-                }
-            },
-            "Experience": {
-                "type": "object",
-                "description": "Experiencia laboral con campos de texto bilingüe (EN/ES sin resolver). Embebida dentro del documento singleton Resume.",
-                "properties": {
-                    "_id": { "type": "string", "description": "ObjectId del subdocumento embebido" },
-                    "company": { "type": "string", "example": "Empresa S.A.", "minLength": 2, "maxLength": 100 },
-                    "role": { "$ref": "#/components/schemas/BilingualString", "description": "Cargo/rol en ambos idiomas" },
-                    "description": { "$ref": "#/components/schemas/BilingualString", "description": "Descripción del puesto en ambos idiomas" },
-                    "achievements": { "$ref": "#/components/schemas/BilingualStringArray", "description": "Logros destacados en ambos idiomas" },
-                    "startDate": { "type": "string", "format": "date", "example": "2022-01-01" },
-                    "endDate": { "type": "string", "format": "date" },
-                    "current": { "type": "boolean", "default": false }
-                }
-            },
-            "ExperienceInput": {
-                "type": "object",
-                "description": "Body para crear o actualizar una experiencia embebida (campos bilingüe requeridos).",
-                "required": ["company", "role", "startDate"],
-                "properties": {
-                    "company": { "type": "string", "example": "Empresa S.A.", "minLength": 2, "maxLength": 100 },
-                    "role": {
-                        "type": "object",
-                        "required": ["en", "es"],
-                        "properties": {
-                            "en": { "type": "string", "example": "Full Stack Developer", "maxLength": 100 },
-                            "es": { "type": "string", "example": "Desarrollador Full Stack", "maxLength": 100 }
-                        }
-                    },
-                    "description": {
-                        "type": "object",
-                        "properties": {
-                            "en": { "type": "string", "maxLength": 1000 },
-                            "es": { "type": "string", "maxLength": 1000 }
-                        }
-                    },
-                    "achievements": {
-                        "type": "object",
-                        "properties": {
-                            "en": { "type": "array", "items": { "type": "string" } },
-                            "es": { "type": "array", "items": { "type": "string" } }
-                        }
-                    },
-                    "startDate": { "type": "string", "format": "date", "example": "2022-01-01" },
-                    "endDate": { "type": "string", "format": "date" },
-                    "current": { "type": "boolean", "default": false }
-                }
-            },
-            "ResumeProfile": {
-                "type": "object",
-                "description": "Perfil del CV con campos bilingüe (retornado por GET /experiences sin resolver el idioma).",
-                "properties": {
-                    "name": { "type": "string", "example": "Diego Polanco" },
-                    "email": { "type": "string", "format": "email", "example": "diego@polanco.dev" },
-                    "website": { "type": "string", "example": "polanco.dev" },
-                    "linkedin": { "type": "string", "example": "linkedin.com/in/dpolanco" },
-                    "github": { "type": "string", "example": "github.com/dpolanco" },
-                    "title": { "$ref": "#/components/schemas/BilingualString" },
-                    "location": { "$ref": "#/components/schemas/BilingualString" },
-                    "summary": { "$ref": "#/components/schemas/BilingualString" },
-                    "skills": {
-                        "type": "object",
-                        "description": "Habilidades técnicas (sin traducción — iguales en ambos idiomas)",
-                        "properties": {
-                            "frontend": { "type": "array", "items": { "type": "string" }, "example": ["Angular", "TypeScript", "Tailwind CSS"] },
-                            "backend": { "type": "array", "items": { "type": "string" }, "example": ["Node.js", "Express", "MongoDB"] },
-                            "tools": { "type": "array", "items": { "type": "string" }, "example": ["Git", "Docker", "AWS"] }
-                        }
-                    },
-                    "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
-                    "languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageSkill" } }
-                }
-            },
-            "Cheatsheet": {
-                "type": "object",
-                "properties": {
-                    "_id": { "type": "string" },
-                    "title": { "type": "string", "example": "Git Commands" },
-                    "description": { "type": "string" },
-                    "language": { "type": "string", "example": "git" },
-                    "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
-                    "content": { "type": "string", "description": "Contenido en Markdown" },
-                    "createdAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "QuickTip": {
-                "type": "object",
-                "properties": {
-                    "_id": { "type": "string" },
-                    "title": { "type": "string", "example": "Desestructuración de objetos en JS" },
-                    "language": { "type": "string", "example": "javascript" },
-                    "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
-                    "codeSnippet": { "type": "string" },
-                    "description": { "type": "string" },
-                    "tags": { "type": "array", "items": { "type": "string" } },
-                    "createdAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "ContactInput": {
-                "required": ["name", "email", "subject", "message"],
-                "properties": {
-                    "name": { "type": "string", "example": "Carlos López" },
-                    "email": { "type": "string", "format": "email", "example": "carlos@example.com" },
-                    "subject": { "type": "string", "example": "Consulta sobre colaboración" },
-                    "message": { "type": "string", "minLength": 10, "example": "Hola Diego, me gustaría hablar sobre un proyecto..." }
-                }
-            },
-            "Resume": {
-                "type": "object",
-                "description": "CV resuelto a un idioma específico (retornado por GET /resume/:lang). Todos los campos bilingüe ya están seleccionados para el idioma solicitado.",
-                "properties": {
-                    "name": { "type": "string", "example": "Diego Polanco" },
-                    "title": { "type": "string", "example": "Full Stack Developer" },
-                    "email": { "type": "string", "format": "email", "example": "diego@polanco.dev" },
-                    "location": { "type": "string", "example": "Latin America (Remote)" },
-                    "website": { "type": "string", "example": "polanco.dev" },
-                    "linkedin": { "type": "string", "example": "linkedin.com/in/dpolanco" },
-                    "github": { "type": "string", "example": "github.com/dpolanco" },
-                    "summary": { "type": "string" },
-                    "skills": {
-                        "type": "object",
-                        "description": "Habilidades técnicas (sin traducción)",
-                        "properties": {
-                            "frontend": { "type": "array", "items": { "type": "string" }, "example": ["Angular", "TypeScript"] },
-                            "backend": { "type": "array", "items": { "type": "string" }, "example": ["Node.js", "Express"] },
-                            "tools": { "type": "array", "items": { "type": "string" }, "example": ["Git", "Docker"] }
-                        }
-                    },
-                    "education": { "type": "array", "items": { "$ref": "#/components/schemas/Education" } },
-                    "languages": { "type": "array", "items": { "$ref": "#/components/schemas/LanguageSkill" } },
-                    "experiences": {
-                        "type": "array",
-                        "description": "Experiencias con campos ya resueltos al idioma solicitado",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "_id": { "type": "string" },
-                                "company": { "type": "string" },
-                                "role": { "type": "string", "description": "Cargo resuelto al idioma" },
-                                "description": { "type": "string", "description": "Descripción resuelta al idioma" },
-                                "achievements": { "type": "array", "items": { "type": "string" }, "description": "Logros resueltos al idioma" },
-                                "startDate": { "type": "string", "format": "date" },
-                                "endDate": { "type": "string", "format": "date" },
-                                "current": { "type": "boolean" }
-                            }
-                        }
-                    }
-                }
-            },
-            "ResumeResponse": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "example": "success" },
-                    "data": {
-                        "type": "object",
-                        "properties": {
-                            "resume": { "$ref": "#/components/schemas/Resume" }
-                        }
-                    }
-                }
-            },
-            "Education": {
-                "type": "object",
-                "properties": {
-                    "institution": { "type": "string", "example": "Universidad Nacional" },
-                    "degree": { "type": "string", "example": "Ingeniería en Sistemas" },
-                    "startDate": { "type": "string", "example": "2018" },
-                    "endDate": { "type": "string", "example": "2022" }
-                }
-            },
-            "LanguageSkill": {
-                "type": "object",
-                "properties": {
-                    "language": { "type": "string", "example": "Spanish" },
-                    "level": { "type": "string", "example": "Native" }
-                }
+    {
+      "name": "Users",
+      "description": "Gestión de usuarios (solo admin)"
+    },
+    {
+      "name": "Current User",
+      "description": "Operaciones del usuario autenticado"
+    },
+    {
+      "name": "Articles",
+      "description": "CRUD de artículos del blog"
+    },
+    {
+      "name": "Comments",
+      "description": "Sistema de comentarios con flujo de aprobación"
+    },
+    {
+      "name": "Experiences",
+      "description": "Experiencia laboral / portafolio"
+    },
+    {
+      "name": "Cheatsheets",
+      "description": "Hojas de referencia rápida"
+    },
+    {
+      "name": "QuickTips",
+      "description": "Snippets y trucos de código"
+    },
+    {
+      "name": "Upload",
+      "description": "Subida y procesamiento de imágenes"
+    },
+    {
+      "name": "Contact",
+      "description": "Formulario de contacto por email"
+    },
+    {
+      "name": "Resume",
+      "description": "Datos del CV/Portafolio combinando perfil estático y experiencias dinámicas"
+    }
+  ],
+  "paths": {
+    "/users/signup": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Registrar nuevo usuario",
+        "description": "Crea una nueva cuenta de usuario y devuelve un token JWT.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSignup"
+              }
             }
+          }
         },
         "responses": {
-            "400": { "description": "Solicitud incorrecta — parámetros inválidos o faltantes." },
-            "401": { "description": "No autorizado — token JWT faltante o inválido." },
-            "403": { "description": "Prohibido — no tienes permisos para realizar esta acción." },
-            "404": { "description": "No encontrado — el recurso solicitado no existe." }
-        },
-        "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-                "description": "Token JWT obtenido en /users/login. Formato: Bearer <token>"
+          "201": {
+            "description": "Usuario creado correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          }
         }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Iniciar sesión",
+        "description": "Autentica con email y contraseña, devuelve un token JWT.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "admin@polanco.dev"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "pass1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/users/logout": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Cerrar sesión",
+        "description": "Invalida la cookie de sesión JWT y añade el token a la blacklist. Requiere autenticación con rol admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sesión cerrada correctamente"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/users/refresh-token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refrescar token JWT",
+        "description": "Genera un nuevo token JWT a partir del token actual (aceptado hasta 7 días después de su expiración). Requiere autenticación con rol admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nuevo token generado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/users/forgotPassword": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Solicitar restablecimiento de contraseña",
+        "description": "Envía un email con token de restablecimiento.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email enviado correctamente"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/users/resetPassword/{token}": {
+      "patch": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Restablecer contraseña",
+        "description": "Restablece la contraseña usando el token recibido por email.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token de restablecimiento recibido por email"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "password",
+                  "passwordConfirm"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordConfirm": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña restablecida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Current User"
+        ],
+        "summary": "Obtener perfil propio",
+        "description": "Devuelve los datos del usuario actualmente autenticado.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/users/updateMe": {
+      "patch": {
+        "tags": [
+          "Current User"
+        ],
+        "summary": "Actualizar datos propios",
+        "description": "Actualiza nombre o email del usuario autenticado (no la contraseña).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/users/updateMyPassword": {
+      "patch": {
+        "tags": [
+          "Current User"
+        ],
+        "summary": "Actualizar contraseña propia",
+        "description": "Actualiza la contraseña del usuario autenticado.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "passwordCurrent",
+                  "password",
+                  "passwordConfirm"
+                ],
+                "properties": {
+                  "passwordCurrent": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordConfirm": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/users/deleteMe": {
+      "delete": {
+        "tags": [
+          "Current User"
+        ],
+        "summary": "Desactivar cuenta propia",
+        "description": "Desactiva (soft-delete) la cuenta del usuario autenticado.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cuenta desactivada"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Listar todos los usuarios",
+        "description": "Devuelve todos los usuarios registrados. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Obtener usuario por ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "615930d4f37971021d64b413"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Actualizar usuario por ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Eliminar usuario por ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuario eliminado"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Listar artículos",
+        "description": "Devuelve todos los artículos publicados. Soporta filtrado, ordenamiento, paginación y selección de campos.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Programacion",
+                "Idioma"
+              ]
+            },
+            "description": "Filtrar por categoría"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ordenar por campo(s), ej: -createdAt,title"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Seleccionar campos, ej: title,description"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por tags, ej: Angular,TypeScript"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Article"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Crear artículo",
+        "description": "Crea un nuevo artículo. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Artículo creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/articles/top-5": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Top 5 artículos",
+        "description": "Devuelve los 5 artículos con más vistas, ordenados por fecha de creación descendente.",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Article"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/search": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Buscar artículos",
+        "description": "Búsqueda de texto completo en título, descripción y contenido.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Término de búsqueda",
+            "example": "typescript"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados de búsqueda",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Article"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/drafts": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Listar borradores",
+        "description": "Devuelve artículos en estado borrador. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/articles/admin/stats": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Estadísticas del dashboard",
+        "description": "Devuelve estadísticas agregadas para el panel de administración (total artículos, vistas, likes, etc.). Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/articles/{id}": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Obtener artículo por slug",
+        "description": "Busca el artículo por su slug único, generado automáticamente desde el título al crear o actualizar el artículo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug del artículo (generado desde el título)",
+            "example": "guia-completa-de-typescript"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Actualizar artículo",
+        "description": "Actualiza parcialmente un artículo. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Artículo actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Eliminar artículo",
+        "description": "Elimina un artículo por ID. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Artículo eliminado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles/{id}/view": {
+      "patch": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Incrementar contador de vistas",
+        "description": "Incrementa en 1 el contador de vistas del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 10 minutos.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug del artículo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vistas incrementadas"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles/{id}/like": {
+      "patch": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Dar like a un artículo",
+        "description": "Incrementa en 1 el contador de likes del artículo. Requiere autenticación con rol admin. Rate limited: 1 por IP/slug cada 24 horas.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug del artículo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Like registrado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles/{id}/related": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Artículos relacionados",
+        "description": "Devuelve hasta 4 artículos de la misma categoría, excluyendo el actual. Recibe el slug del artículo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId o slug del artículo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Article"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles/{articleId}/comments": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Listar comentarios aprobados",
+        "description": "Devuelve todos los comentarios aprobados de un artículo.",
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Enviar comentario",
+        "description": "Crea un comentario para un artículo. Queda en estado pendiente hasta ser aprobado. Requiere autenticación con rol admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comentario enviado, pendiente de aprobación"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/articles/{articleId}/comments/pending": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Listar comentarios pendientes",
+        "description": "Devuelve los comentarios pendientes de aprobación de un artículo. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/articles/{articleId}/comments/{id}/approve": {
+      "patch": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Aprobar comentario",
+        "description": "Cambia el estado del comentario de 'pending' a 'approved'. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comentario aprobado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/articles/{articleId}/comments/{id}": {
+      "delete": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Eliminar comentario",
+        "description": "Elimina un comentario de un artículo. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "articleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Comentario eliminado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/experiences": {
+      "get": {
+        "tags": [
+          "Experiences"
+        ],
+        "summary": "Obtener perfil y experiencias laborales",
+        "description": "Devuelve el perfil bilingüe del CV y el listado de experiencias, ambos con campos EN/ES sin resolver.",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "profile": {
+                          "$ref": "#/components/schemas/ResumeProfile"
+                        },
+                        "experiences": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Experience"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Experiences"
+        ],
+        "summary": "Crear experiencia",
+        "description": "Solo admin. Añade una experiencia al documento singleton de Resume.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperienceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Experiencia creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "experience": {
+                          "$ref": "#/components/schemas/Experience"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/experiences/{id}": {
+      "patch": {
+        "tags": [
+          "Experiences"
+        ],
+        "summary": "Actualizar experiencia",
+        "description": "Solo admin. Actualiza una experiencia embebida por su _id.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ObjectId de la experiencia embebida"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperienceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Experiencia actualizada"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Experiences"
+        ],
+        "summary": "Eliminar experiencia",
+        "description": "Solo admin. Elimina una experiencia embebida por su _id.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ObjectId de la experiencia embebida"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Experiencia eliminada"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      }
+    },
+    "/cheatsheets": {
+      "get": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Listar cheatsheets",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por lenguaje"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cheatsheet"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Crear cheatsheet",
+        "description": "Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cheatsheet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cheatsheet creado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/cheatsheets/{id}": {
+      "get": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Obtener cheatsheet por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Actualizar cheatsheet",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cheatsheet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cheatsheet actualizado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Eliminar cheatsheet",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cheatsheet eliminado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/quicktips": {
+      "get": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Listar trucos rápidos",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por lenguaje"
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuickTip"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Crear truco rápido",
+        "description": "Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickTip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "QuickTip creado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/quicktips/{id}": {
+      "get": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Obtener truco rápido por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Actualizar truco rápido",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickTip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "QuickTip actualizado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Eliminar truco rápido",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "QuickTip eliminado"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/upload/article-image": {
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "Subir imagen de portada de artículo",
+        "description": "Procesa y almacena la imagen de portada. Redimensiona a 1200x630px en formato WebP. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Imagen de portada (JPG, PNG, WebP — máx. 5MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imagen procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "imageCover": {
+                      "type": "string",
+                      "description": "URL pública de la imagen procesada"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          }
+        }
+      }
+    },
+    "/upload/user-photo": {
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "Subir foto de perfil de usuario",
+        "description": "Procesa y almacena la foto de perfil. Redimensiona a 200x200px en formato WebP.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Foto de perfil (JPG, PNG, WebP — máx. 5MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Foto procesada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "photo": {
+                      "type": "string",
+                      "description": "URL pública de la foto procesada"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        }
+      }
+    },
+    "/resume/{lang}": {
+      "get": {
+        "tags": [
+          "Resume"
+        ],
+        "summary": "Obtener datos del CV",
+        "description": "Devuelve los datos del CV combinando el perfil estático de `data/resume.json` con las experiencias laborales dinámicas de MongoDB. El campo `slug` en cada artículo permite enlazar directamente desde el PDF generado.",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "es"
+              ]
+            },
+            "description": "Idioma del CV",
+            "example": "en"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del CV obtenidos correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          }
+        }
+      }
+    },
+    "/contact": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "summary": "Enviar mensaje de contacto",
+        "description": "Envía un email al administrador con el mensaje del formulario de contacto.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mensaje enviado correctamente"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          }
+        }
+      }
+    },
+    "/articles/admin/all": {
+      "get": {
+        "tags": [
+          "Articles"
+        ],
+        "summary": "Listado admin de articulos (publicados + borradores)",
+        "description": "Devuelve todos los articulos sin filtro de visibilidad. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista completa de articulos con su campo published"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Requiere rol admin"
+          }
+        }
+      }
+    },
+    "/quicktips/admin/all": {
+      "get": {
+        "tags": [
+          "QuickTips"
+        ],
+        "summary": "Listado admin de quicktips (publicados + borradores)",
+        "description": "Devuelve todos los quicktips sin filtro de visibilidad. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista completa de quicktips con su campo published"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Requiere rol admin"
+          }
+        }
+      }
+    },
+    "/cheatsheets/admin/all": {
+      "get": {
+        "tags": [
+          "Cheatsheets"
+        ],
+        "summary": "Listado admin de cheatsheets (publicados + borradores)",
+        "description": "Devuelve todos los cheatsheets sin filtro de visibilidad. Solo admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista completa de cheatsheets con su campo published"
+          },
+          "401": {
+            "description": "No autenticado"
+          },
+          "403": {
+            "description": "Requiere rol admin"
+          }
+        }
+      }
     }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "passwordChangedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserSignup": {
+        "required": [
+          "name",
+          "email",
+          "password",
+          "passwordConfirm"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Diego Polanco"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "diego@polanco.dev"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "pass1234"
+          },
+          "passwordConfirm": {
+            "type": "string",
+            "example": "pass1234"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT token"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        }
+      },
+      "Article": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "615930d4f37971021d64b413"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug único generado automáticamente desde el título (solo minúsculas, separado por guiones; tildes y ñ se normalizan: á → a, ñ → n; sin guiones al inicio/final)",
+            "example": "guia-completa-de-typescript",
+            "readOnly": true
+          },
+          "title": {
+            "type": "string",
+            "example": "Guía completa de TypeScript"
+          },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "imageCover": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Programacion",
+              "Idioma"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "author": {
+            "$ref": "#/components/schemas/User"
+          },
+          "views": {
+            "type": "integer",
+            "default": 0
+          },
+          "likes": {
+            "type": "integer",
+            "default": 0
+          },
+          "published": {
+            "type": "boolean",
+            "default": true,
+            "description": "false = borrador, true = publicado"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ArticleInput": {
+        "required": [
+          "title",
+          "description",
+          "category"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 40,
+            "example": "Guía completa de TypeScript",
+            "description": "Título único. El slug se genera automáticamente."
+          },
+          "description": {
+            "type": "string",
+            "example": "Aprende TypeScript desde cero"
+          },
+          "content": {
+            "type": "string",
+            "description": "Contenido en Markdown"
+          },
+          "imageCover": {
+            "type": "string",
+            "description": "URL de la imagen de portada (obtenida de POST /upload/article-image)"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Programacion",
+              "Idioma"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "published": {
+            "type": "boolean",
+            "default": true,
+            "description": "false para guardar como borrador"
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "body": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved"
+            ],
+            "default": "pending"
+          },
+          "article": {
+            "type": "string",
+            "description": "ID del artículo"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CommentInput": {
+        "required": [
+          "author",
+          "email",
+          "body"
+        ],
+        "properties": {
+          "author": {
+            "type": "string",
+            "example": "María García"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "body": {
+            "type": "string",
+            "example": "Excelente artículo, muy bien explicado."
+          }
+        }
+      },
+      "BilingualString": {
+        "type": "object",
+        "description": "Campo con valor en inglés y español",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "es": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "en",
+          "es"
+        ]
+      },
+      "BilingualStringArray": {
+        "type": "object",
+        "description": "Lista de cadenas bilingüe",
+        "properties": {
+          "en": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "es": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Experience": {
+        "type": "object",
+        "description": "Experiencia laboral con campos de texto bilingüe (EN/ES sin resolver). Embebida dentro del documento singleton Resume.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "ObjectId del subdocumento embebido"
+          },
+          "company": {
+            "type": "string",
+            "example": "Empresa S.A.",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "role": {
+            "$ref": "#/components/schemas/BilingualString",
+            "description": "Cargo/rol en ambos idiomas"
+          },
+          "description": {
+            "$ref": "#/components/schemas/BilingualString",
+            "description": "Descripción del puesto en ambos idiomas"
+          },
+          "achievements": {
+            "$ref": "#/components/schemas/BilingualStringArray",
+            "description": "Logros destacados en ambos idiomas"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "current": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ExperienceInput": {
+        "type": "object",
+        "description": "Body para crear o actualizar una experiencia embebida (campos bilingüe requeridos).",
+        "required": [
+          "company",
+          "role",
+          "startDate"
+        ],
+        "properties": {
+          "company": {
+            "type": "string",
+            "example": "Empresa S.A.",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "object",
+            "required": [
+              "en",
+              "es"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Full Stack Developer",
+                "maxLength": 100
+              },
+              "es": {
+                "type": "string",
+                "example": "Desarrollador Full Stack",
+                "maxLength": 100
+              }
+            }
+          },
+          "description": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "es": {
+                "type": "string",
+                "maxLength": 1000
+              }
+            }
+          },
+          "achievements": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "es": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "current": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ResumeProfile": {
+        "type": "object",
+        "description": "Perfil del CV con campos bilingüe (retornado por GET /experiences sin resolver el idioma).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Diego Polanco"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "diego@polanco.dev"
+          },
+          "website": {
+            "type": "string",
+            "example": "polanco.dev"
+          },
+          "linkedin": {
+            "type": "string",
+            "example": "linkedin.com/in/dpolanco"
+          },
+          "github": {
+            "type": "string",
+            "example": "github.com/dpolanco"
+          },
+          "title": {
+            "$ref": "#/components/schemas/BilingualString"
+          },
+          "location": {
+            "$ref": "#/components/schemas/BilingualString"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BilingualString"
+          },
+          "skills": {
+            "type": "object",
+            "description": "Habilidades técnicas (sin traducción — iguales en ambos idiomas)",
+            "properties": {
+              "frontend": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Angular",
+                  "TypeScript",
+                  "Tailwind CSS"
+                ]
+              },
+              "backend": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Node.js",
+                  "Express",
+                  "MongoDB"
+                ]
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Git",
+                  "Docker",
+                  "AWS"
+                ]
+              }
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Education"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LanguageSkill"
+            }
+          }
+        }
+      },
+      "Cheatsheet": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "example": "Git Commands"
+          },
+          "description": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string",
+            "example": "git"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "Contenido en Markdown"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "published": {
+            "type": "boolean",
+            "default": true,
+            "description": "Visibilidad: false lo oculta de todos los endpoints publicos"
+          }
+        }
+      },
+      "QuickTip": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "example": "Desestructuración de objetos en JS"
+          },
+          "language": {
+            "type": "string",
+            "example": "javascript"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          },
+          "codeSnippet": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "published": {
+            "type": "boolean",
+            "default": true,
+            "description": "Visibilidad: false lo oculta de todos los endpoints publicos"
+          }
+        }
+      },
+      "ContactInput": {
+        "required": [
+          "name",
+          "email",
+          "subject",
+          "message"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Carlos López"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "carlos@example.com"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Consulta sobre colaboración"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 10,
+            "example": "Hola Diego, me gustaría hablar sobre un proyecto..."
+          }
+        }
+      },
+      "Resume": {
+        "type": "object",
+        "description": "CV resuelto a un idioma específico (retornado por GET /resume/:lang). Todos los campos bilingüe ya están seleccionados para el idioma solicitado.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Diego Polanco"
+          },
+          "title": {
+            "type": "string",
+            "example": "Full Stack Developer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "diego@polanco.dev"
+          },
+          "location": {
+            "type": "string",
+            "example": "Latin America (Remote)"
+          },
+          "website": {
+            "type": "string",
+            "example": "polanco.dev"
+          },
+          "linkedin": {
+            "type": "string",
+            "example": "linkedin.com/in/dpolanco"
+          },
+          "github": {
+            "type": "string",
+            "example": "github.com/dpolanco"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "object",
+            "description": "Habilidades técnicas (sin traducción)",
+            "properties": {
+              "frontend": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Angular",
+                  "TypeScript"
+                ]
+              },
+              "backend": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Node.js",
+                  "Express"
+                ]
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Git",
+                  "Docker"
+                ]
+              }
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Education"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LanguageSkill"
+            }
+          },
+          "experiences": {
+            "type": "array",
+            "description": "Experiencias con campos ya resueltos al idioma solicitado",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string"
+                },
+                "company": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "description": "Cargo resuelto al idioma"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Descripción resuelta al idioma"
+                },
+                "achievements": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Logros resueltos al idioma"
+                },
+                "startDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "endDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "current": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResumeResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "resume": {
+                "$ref": "#/components/schemas/Resume"
+              }
+            }
+          }
+        }
+      },
+      "Education": {
+        "type": "object",
+        "properties": {
+          "institution": {
+            "type": "string",
+            "example": "Universidad Nacional"
+          },
+          "degree": {
+            "type": "string",
+            "example": "Ingeniería en Sistemas"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2018"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2022"
+          }
+        }
+      },
+      "LanguageSkill": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "example": "Spanish"
+          },
+          "level": {
+            "type": "string",
+            "example": "Native"
+          }
+        }
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "Solicitud incorrecta — parámetros inválidos o faltantes."
+      },
+      "401": {
+        "description": "No autorizado — token JWT faltante o inválido."
+      },
+      "403": {
+        "description": "Prohibido — no tienes permisos para realizar esta acción."
+      },
+      "404": {
+        "description": "No encontrado — el recurso solicitado no existe."
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtenido en /users/login. Formato: Bearer <token>"
+      }
+    }
+  }
 }

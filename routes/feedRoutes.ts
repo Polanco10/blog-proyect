@@ -20,10 +20,10 @@ router.get(
         const articles = await Article.find({ published: true })
             .sort('-createdAt')
             .limit(20)
-            .select('title description createdAt category tags imageCover _id');
+            .select('title description createdAt category tags imageCover slug');
 
         interface FeedArticle {
-            _id: string;
+            slug: string;
             title: string;
             description: string;
             createdAt: Date;
@@ -36,8 +36,8 @@ router.get(
                 (a: FeedArticle) => `
     <item>
       <title>${escapeXml(a.title)}</title>
-      <link>${siteUrl}/articles/${a._id}</link>
-      <guid isPermaLink="true">${siteUrl}/articles/${a._id}</guid>
+      <link>${siteUrl}/articles/${a.slug}</link>
+      <guid isPermaLink="true">${siteUrl}/articles/${a.slug}</guid>
       <description>${escapeXml(a.description)}</description>
       <pubDate>${new Date(a.createdAt).toUTCString()}</pubDate>
       <category>${escapeXml(a.category)}</category>

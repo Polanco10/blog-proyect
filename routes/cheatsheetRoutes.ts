@@ -3,12 +3,23 @@ const cheatsheetController = require('../controllers/cheatsheetController');
 const authController = require('./../controllers/authController');
 const { validateCheatsheet, validateCheatsheetPatch } = require('../utils/validators');
 const { ROLES } = require('../constants');
+const { stripPublishedFilter, includeDrafts } = require('../utils/visibility');
 
 const router: Router = express.Router();
 
+// Listado admin: incluye borradores (debe ir antes de /:id)
+router
+    .route('/admin/all')
+    .get(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        includeDrafts,
+        cheatsheetController.getAllCheatsheets
+    );
+
 router
     .route('/')
-    .get(cheatsheetController.getAllCheatsheets)
+    .get(stripPublishedFilter, cheatsheetController.getAllCheatsheets)
     .post(
         authController.protect,
         authController.restrictTo(ROLES.ADMIN),

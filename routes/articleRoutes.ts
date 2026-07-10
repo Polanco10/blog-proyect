@@ -5,6 +5,7 @@ import * as authController from '../controllers/authController';
 const { validateArticle, validateArticlePatch } = require('../utils/validators');
 const { upload, resizeArticleImage } = require('../utils/upload');
 const { ROLES } = require('../constants');
+const { stripPublishedFilter, includeDrafts } = require('../utils/visibility');
 
 const router = Router();
 
@@ -36,10 +37,18 @@ router
 router
     .route('/admin/stats')
     .get(authController.protect, authController.restrictTo(ROLES.ADMIN), articleController.getAdminStats);
+router
+    .route('/admin/all')
+    .get(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        includeDrafts,
+        articleController.getAllArticles
+    );
 
 router
     .route('/')
-    .get(articleController.getAllArticles)
+    .get(stripPublishedFilter, articleController.getAllArticles)
     .post(
         authController.protect,
         authController.restrictTo(ROLES.ADMIN),

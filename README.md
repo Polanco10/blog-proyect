@@ -7,6 +7,7 @@ La API RESTful que alimenta **Polanco.dev** — un blog técnico, repositorio de
 ## Características Principales
 
 - **CRUD Completo** para Artículos, Trucos Rápidos, Cheatsheets, Experiencias y Comentarios
+- **Visibilidad por recurso** — Artículos, quicktips y cheatsheets tienen `published`; los drafts son invisibles en todos los endpoints públicos (el filtro `?published=` del cliente se ignora) y el admin los gestiona vía `GET /*/admin/all` + `PATCH { published }`
 - **Modelo Resume Singleton Bilingüe** — Un único documento MongoDB contiene el perfil completo + las experiencias embebidas como subdocumentos. Los campos de texto (`role`, `description`, `achievements`) se almacenan con estructura `{ en, es }` y se resuelven al idioma solicitado en tiempo de petición
 - **Autenticación JWT** con control de acceso basado en roles (`admin` / `user`)
 - **Patrón Strategy** — Estrategias de autenticación intercambiables (`JWTStrategy`, `LocalStrategy`) que extienden una clase base `AuthStrategy`
@@ -86,19 +87,22 @@ CLOUDINARY_API_SECRET=...
 
 ## Scripts Disponibles
 
-| Comando                       | Descripción                                                             |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| `npm run dev`                 | Servidor de desarrollo con nodemon + tsx (auto-reload)                  |
-| `npm start`                   | Inicio estándar desde build compilado (`dist/server.js`)                |
-| `npm run prod`                | Modo producción con tsx (`NODE_ENV=production`)                         |
-| `npm run build`               | Verificación de tipos TypeScript (`tsc --noEmit`)                       |
-| `npm run debug`               | Depuración con ndb                                                      |
-| `npm test`                    | Ejecutar pruebas Jest (MongoDB Memory Server)                           |
-| `npm run test:verbose`        | Salida detallada de pruebas                                             |
-| `npm run seed:resume`         | Poblar el documento singleton de Resume (perfil + experiencias EN/ES)   |
-| `npm run seed:resume:reset`   | Eliminar y re-sembrar el documento de Resume desde cero                 |
-| `npm run seed:articles`       | Insertar/actualizar los artículos de `data/articles/*.md` (idempotente) |
-| `npm run seed:articles:reset` | Eliminar y re-sembrar los artículos definidos en `data/articles/`       |
+| Comando                        | Descripción                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| `npm run dev`                  | Servidor de desarrollo con nodemon + tsx (auto-reload)                                        |
+| `npm start`                    | Inicio estándar desde build compilado (`dist/server.js`)                                      |
+| `npm run prod`                 | Modo producción con tsx (`NODE_ENV=production`)                                               |
+| `npm run build`                | Verificación de tipos TypeScript (`tsc --noEmit`)                                             |
+| `npm run debug`                | Depuración con ndb                                                                            |
+| `npm test`                     | Ejecutar pruebas Jest (MongoDB Memory Server)                                                 |
+| `npm run test:verbose`         | Salida detallada de pruebas                                                                   |
+| `npm run seed:resume`          | Poblar el documento singleton de Resume (perfil + experiencias EN/ES)                         |
+| `npm run seed:resume:reset`    | Eliminar y re-sembrar el documento de Resume desde cero                                       |
+| `npm run seed:articles`        | Insertar/actualizar los artículos de `data/articles/*.md` (idempotente)                       |
+| `npm run seed:articles:reset`  | Eliminar y re-sembrar los artículos definidos en `data/articles/`                             |
+| `npm run seed:quicktips`       | Insertar/actualizar los quicktips de `data/quicktips.json` (idempotente)                      |
+| `npm run seed:quicktips:reset` | Eliminar y re-sembrar los quicktips definidos en `data/quicktips.json`                        |
+| `npm run migrate:published`    | Backfill de `published: true` en docs anteriores a la feature de visibilidad (una vez por DB) |
 
 ---
 
@@ -161,6 +165,8 @@ blog-proyect/
 ├── data/
 │   ├── seed-resume.js          # Script de seed: pobla el documento singleton de Resume (perfil + experiencias EN/ES)
 │   ├── seed-articles.ts        # Script de seed: upsert de artículos desde data/articles/*.md (frontmatter + markdown)
+│   ├── seed-quicktips.ts       # Script de seed: upsert de quicktips desde data/quicktips.json
+│   ├── quicktips.json          # Quicktips (title, language, seniority, description, codeSnippet)
 │   └── articles/               # Artículos en markdown con frontmatter (title, description, tags, published)
 ├── tests/
 │   ├── integration/            # Pruebas completas de petición/respuesta

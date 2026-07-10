@@ -32,6 +32,10 @@ const quickTipSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        published: {
+            type: Boolean,
+            default: true,
+        },
         slug: {
             type: String,
             unique: true,
@@ -47,6 +51,16 @@ const quickTipSchema = new mongoose.Schema(
 );
 
 quickTipSchema.plugin(slugPlugin);
+
+// Solo mostrar tips publicados cuando no se filtra por published explícitamente.
+// Restringido a find/findOne: los updates/deletes por slug deben alcanzar drafts.
+quickTipSchema.pre(['find', 'findOne'], function (this: mongoose.Query<unknown, unknown>, next) {
+    if (this.getFilter().published === undefined) {
+        // $ne false y no true: los docs legacy sin el campo cuentan como publicados
+        this.where({ published: { $ne: false } });
+    }
+    next();
+});
 
 // Indexes para filtrado por lenguaje y nivel
 quickTipSchema.index({ language: 1 });

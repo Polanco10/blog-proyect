@@ -19,6 +19,9 @@
         "seed:resume:reset": "npx tsx data/seed-resume.ts --reset",
         "seed:articles": "npx tsx data/seed-articles.ts",
         "seed:articles:reset": "npx tsx data/seed-articles.ts --reset",
+        "seed:quicktips": "npx tsx data/seed-quicktips.ts",
+        "seed:quicktips:reset": "npx tsx data/seed-quicktips.ts --reset",
+        "migrate:published": "npx tsx data/migrate-published.ts",
         "prepare": "husky"
     },
     "author": "Diego Polanco",

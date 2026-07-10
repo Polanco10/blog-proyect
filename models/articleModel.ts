@@ -74,11 +74,18 @@ articleSchema.index({ title: 'text', description: 'text' }); // full-text search
 // Genera el slug a partir del título antes de guardar
 articleSchema.plugin(slugPlugin);
 
-articleSchema.pre(/^find/, function (this: mongoose.Query<unknown, unknown>, next) {
-    // Solo mostrar artículos publicados cuando no se filtra por published explícitamente
+// Solo mostrar artículos publicados cuando no se filtra por published explícitamente.
+// Restringido a find/findOne: /^find/ también cubría findOneAndUpdate/Delete e
+// impedía editar, despublicar o borrar drafts por slug.
+articleSchema.pre(['find', 'findOne'], function (this: mongoose.Query<unknown, unknown>, next) {
     if (this.getFilter().published === undefined) {
-        this.where({ published: true });
+        // $ne false y no true: los docs legacy sin el campo cuentan como publicados
+        this.where({ published: { $ne: false } });
     }
+    next();
+});
+
+articleSchema.pre(/^find/, function (this: mongoose.Query<unknown, unknown>, next) {
     this.populate({
         path: 'author',
         select: '-__v -role -_id',

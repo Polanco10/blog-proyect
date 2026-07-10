@@ -3,12 +3,23 @@ const quicktipController = require('../controllers/quicktipController');
 const authController = require('./../controllers/authController');
 const { validateQuickTip, validateQuickTipPatch } = require('../utils/validators');
 const { ROLES } = require('../constants');
+const { stripPublishedFilter, includeDrafts } = require('../utils/visibility');
 
 const router: Router = express.Router();
 
+// Listado admin: incluye borradores (debe ir antes de /:id)
+router
+    .route('/admin/all')
+    .get(
+        authController.protect,
+        authController.restrictTo(ROLES.ADMIN),
+        includeDrafts,
+        quicktipController.getAllQuickTips
+    );
+
 router
     .route('/')
-    .get(quicktipController.getAllQuickTips)
+    .get(stripPublishedFilter, quicktipController.getAllQuickTips)
     .post(
         authController.protect,
         authController.restrictTo(ROLES.ADMIN),
