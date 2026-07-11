@@ -102,6 +102,25 @@ describe('Visibilidad de artículos', () => {
         expect(byTitle['Articulo borrador oculto']).toBe(false);
     });
 
+    it('el total de paginación público cuenta solo publicados (no drafts)', async () => {
+        // El countDocuments debe respetar el hook de visibilidad, o el total
+        // incluiría drafts y la paginación mostraría páginas de más.
+        const publicRes = await request(app).get('/api/v1/articles?page=1&limit=1');
+        const adminRes = await auth(request(app).get('/api/v1/articles/admin/all'));
+
+        const publicados = adminRes.body.data.articles.filter(a => a.published !== false).length;
+        expect(publicRes.body.total).toBe(publicados);
+        // Y hay al menos un draft, para que la aserción no sea trivial
+        expect(adminRes.body.data.articles.length).toBeGreaterThan(publicados);
+    });
+
+    it('el total admin (admin/all) sí incluye los drafts', async () => {
+        // El total admin debe ser mayor que el público (incluye drafts)
+        const adminRes = await auth(request(app).get('/api/v1/articles/admin/all?page=1&limit=1'));
+        const publicRes = await request(app).get('/api/v1/articles?page=1&limit=1');
+        expect(adminRes.body.total).toBeGreaterThan(publicRes.body.total);
+    });
+
     it('el admin puede despublicar y republicar por slug (toggle)', async () => {
         // Despublicar el publicado
         const hide = await auth(request(app).patch(`/api/v1/articles/${publishedSlug}`).send({ published: false }));

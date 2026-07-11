@@ -45,8 +45,9 @@ const cheatsheetSchema = new mongoose.Schema(
 cheatsheetSchema.plugin(slugPlugin);
 
 // Solo mostrar cheatsheets publicadas cuando no se filtra por published explícitamente.
-// Restringido a find/findOne: los updates/deletes por slug deben alcanzar drafts.
-cheatsheetSchema.pre(['find', 'findOne'], function (this: mongoose.Query<unknown, unknown>, next) {
+// find/findOne para listados y detalle; countDocuments para que el conteo de
+// paginación excluya drafts. Los updates/deletes por slug deben alcanzar drafts.
+cheatsheetSchema.pre(['find', 'findOne', 'countDocuments'], function (this: mongoose.Query<unknown, unknown>, next) {
     if (this.getFilter().published === undefined) {
         // $ne false y no true: los docs legacy sin el campo cuentan como publicados
         this.where({ published: { $ne: false } });

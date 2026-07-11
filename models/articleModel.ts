@@ -88,9 +88,10 @@ articleSchema.pre('save', function (next) {
 });
 
 // Solo mostrar artículos publicados cuando no se filtra por published explícitamente.
-// Restringido a find/findOne: /^find/ también cubría findOneAndUpdate/Delete e
-// impedía editar, despublicar o borrar drafts por slug.
-articleSchema.pre(['find', 'findOne'], function (this: mongoose.Query<unknown, unknown>, next) {
+// find/findOne para los listados y detalle; countDocuments para que el `total` de
+// la paginación excluya los drafts (sin él, el conteo los incluye y sobran páginas).
+// NO se incluye findOneAndUpdate/Delete: esos deben alcanzar drafts por slug.
+articleSchema.pre(['find', 'findOne', 'countDocuments'], function (this: mongoose.Query<unknown, unknown>, next) {
     if (this.getFilter().published === undefined) {
         // $ne false y no true: los docs legacy sin el campo cuentan como publicados
         this.where({ published: { $ne: false } });
