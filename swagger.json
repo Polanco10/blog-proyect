@@ -2237,6 +2237,11 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "readTime": {
+            "type": "string",
+            "description": "Minutos de lectura estimados, calculados del content al guardar",
+            "example": "6"
           }
         }
       },

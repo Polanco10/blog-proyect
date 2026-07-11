@@ -45,6 +45,11 @@ const articleSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        // Minutos de lectura estimados — se calcula del content al guardar,
+        // para que los listados puedan proyectar cards sin transferir content
+        readTime: {
+            type: String,
+        },
         views: {
             type: Number,
             default: 0,
@@ -73,6 +78,14 @@ articleSchema.index({ title: 'text', description: 'text' }); // full-text search
 
 // Genera el slug a partir del título antes de guardar
 articleSchema.plugin(slugPlugin);
+
+// Calcula readTime (~200 palabras/min, misma fórmula que el frontend)
+articleSchema.pre('save', function (next) {
+    const doc = this as unknown as { content?: string; readTime?: string };
+    const words = (doc.content ?? '').trim().split(/\s+/).length;
+    doc.readTime = String(Math.max(1, Math.round(words / 200)));
+    next();
+});
 
 // Solo mostrar artículos publicados cuando no se filtra por published explícitamente.
 // Restringido a find/findOne: /^find/ también cubría findOneAndUpdate/Delete e
